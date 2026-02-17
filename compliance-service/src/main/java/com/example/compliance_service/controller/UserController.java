@@ -1,0 +1,87 @@
+package com.example.compliance_service.controller;
+
+import com.example.compliance_service.dto.request.RegisterRequest;
+import com.example.compliance_service.dto.request.UpdateUserRequest;
+import com.example.compliance_service.dto.response.ApiResponse;
+import com.example.compliance_service.dto.response.UserResponse;
+import com.example.compliance_service.service.IUserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final IUserService userService;
+
+    /**
+     * Search/filter users by query parameters (Admin only)
+     * GET /api/users?id=1&username=john&email=john@example.com&firstName=John&lastName=Doe
+     * Any parameter matching User entity field will be used for filtering
+     * If no params provided, returns all users
+     */
+    @GetMapping
+    public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
+        List<UserResponse> users = userService.getUsers(params);
+        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
+    }
+
+    /**
+     * Get current logged-in user profile
+     * GET /api/users/me
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserResponse user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(ApiResponse.success("User profile retrieved successfully", user));
+    }
+
+    /**
+     * Create a new user (SuperAdmin or Admin only)
+     * POST /api/users
+     */
+    @PostMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> createUser(@Valid @RequestBody RegisterRequest request) {
+        UserResponse user = userService.createUser(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("User created successfully", user));
+    }
+
+    /**
+     * Update user (SuperAdmin, Admin, or own profile)
+     * PUT /api/users/{id}
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRequest request) {
+        UserResponse user = userService.updateUser(id, request);
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", user));
+    }
+
+    /**
+     * Delete user (SuperAdmin or Admin only)
+     * DELETE /api/users/{id}
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+    }
+}
