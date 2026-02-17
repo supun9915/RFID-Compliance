@@ -1,0 +1,47 @@
+package com.example.compliance_service.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "vehicle")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Vehicle {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_type_id")
+    private VehicleType vehicleType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
+    @Column(name = "registration_number", nullable = false, unique = true, length = 100)
+    private String registrationNumber;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String epc;
+
+    @Column(name = "registered_year")
+    private Integer registeredYear;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    private List<Document> documents;
+
+}
