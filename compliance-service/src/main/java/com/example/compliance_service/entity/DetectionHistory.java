@@ -25,9 +25,6 @@ public class DetectionHistory {
     @JoinColumn(name = "reader_id")
     private Reader reader;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "antenna_id")
-    private Antenna antenna;
 
     @Column(name = "detected_at")
     private LocalDateTime detectedAt;

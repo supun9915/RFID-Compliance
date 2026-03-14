@@ -1,5 +1,6 @@
 package com.example.compliance_service.security;
 
+import com.example.compliance_service.service.ITokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
+    private final ITokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt) && !tokenBlacklistService.isTokenBlacklisted(jwt)) {
                 String username = jwtTokenProvider.getUsernameFromToken(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

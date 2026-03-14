@@ -23,11 +23,21 @@ public class Vehicle {
     private VehicleType vehicleType;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_model_id")
+    private VehicleModel vehicleModel;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id")
     private User owner;
 
     @Column(name = "registration_number", nullable = false, unique = true, length = 100)
     private String registrationNumber;
+
+    @Column(name = "vehicle_number", length = 100)
+    private String vehicleNumber;
+
+    @Column(name = "chassis_number", length = 100)
+    private String chassisNumber;
 
     @Column(nullable = false, unique = true, length = 100)
     private String epc;

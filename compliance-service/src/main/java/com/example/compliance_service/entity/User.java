@@ -47,6 +47,16 @@ public class User implements UserDetails {
     @Column(length = 20)
     private String nic;
 
+    @Column(length = 100)
+    private String district;
+
+    @Column(length = 100)
+    private String province;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scan_center_id")
+    private ScanCenter scanCenter;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

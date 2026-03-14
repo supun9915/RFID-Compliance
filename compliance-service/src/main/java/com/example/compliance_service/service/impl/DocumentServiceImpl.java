@@ -7,6 +7,7 @@ import com.example.compliance_service.entity.Document;
 import com.example.compliance_service.entity.DocumentType;
 import com.example.compliance_service.entity.Vehicle;
 import com.example.compliance_service.exception.ResourceNotFoundException;
+import com.example.compliance_service.exception.UserAlreadyExistsException;
 import com.example.compliance_service.repository.DocumentRepository;
 import com.example.compliance_service.repository.DocumentTypeRepository;
 import com.example.compliance_service.repository.VehicleRepository;
@@ -86,6 +87,17 @@ public class DocumentServiceImpl implements IDocumentService {
 
         DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + request.getDocumentTypeId()));
+
+        // Check document type uniqueness for the same vehicle
+        if (documentRepository.existsByVehicleIdAndDocumentTypeId(request.getVehicleId(), request.getDocumentTypeId())) {
+            throw new UserAlreadyExistsException("Document of this type already exists for the vehicle");
+        }
+
+        // Create 10-digit random reference number if not provided
+        if (request.getReferenceNumber() == null || request.getReferenceNumber().isEmpty()) {
+            request.setReferenceNumber(String.valueOf((long) (Math.random() * 1_000_000_0000L)));
+        }
+
 
         Document document = Document.builder()
                 .vehicle(vehicle)

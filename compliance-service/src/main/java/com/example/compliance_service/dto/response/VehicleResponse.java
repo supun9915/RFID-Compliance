@@ -15,8 +15,11 @@ public class VehicleResponse {
 
     private Long id;
     private VehicleTypeResponse vehicleType;
+    private VehicleModelResponse vehicleModel;
     private UserResponse owner;
     private String registrationNumber;
+    private String vehicleNumber;
+    private String chassisNumber;
     private String epc;
     private Integer registeredYear;
     private LocalDateTime createdAt;

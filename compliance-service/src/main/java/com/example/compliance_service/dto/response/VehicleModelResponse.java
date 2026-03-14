@@ -11,13 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AntennaResponse {
+public class VehicleModelResponse {
 
     private Long id;
-    private Long readerId;
-    private String readerName;
-    private Integer antennaPort;
     private String name;
+    private VehicleMakeResponse make;
+    private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

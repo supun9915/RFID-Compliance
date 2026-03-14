@@ -20,6 +20,10 @@ public class UserResponse {
     private String lastName;
     private String contactNumber;
     private String nic;
+    private String district;
+    private String province;
+    private Long scanCenterId;
+    private String scanCenterName;
     private RoleResponse role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

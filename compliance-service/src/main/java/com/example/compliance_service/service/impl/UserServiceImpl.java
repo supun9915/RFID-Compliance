@@ -5,10 +5,12 @@ import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.response.RoleResponse;
 import com.example.compliance_service.dto.response.UserResponse;
 import com.example.compliance_service.entity.Role;
+import com.example.compliance_service.entity.ScanCenter;
 import com.example.compliance_service.entity.User;
 import com.example.compliance_service.exception.ResourceNotFoundException;
 import com.example.compliance_service.exception.UserAlreadyExistsException;
 import com.example.compliance_service.repository.RoleRepository;
+import com.example.compliance_service.repository.ScanCenterRepository;
 import com.example.compliance_service.repository.UserRepository;
 import com.example.compliance_service.service.IUserService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class UserServiceImpl implements IUserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ScanCenterRepository scanCenterRepository;
 
     @Override
     public List<UserResponse> getUsers(Map<String, Object> params) {
@@ -112,6 +115,9 @@ public class UserServiceImpl implements IUserService {
                 .lastName(request.getLastName())
                 .contactNumber(request.getContactNumber())
                 .nic(request.getNic())
+                .district(request.getDistrict())
+                .province(request.getProvince())
+                .scanCenter(resolveScanCenter(request.getScanCenterId()))
                 .role(role)
                 .build();
 
@@ -159,12 +165,23 @@ public class UserServiceImpl implements IUserService {
         if (request.getNic() != null) {
             user.setNic(request.getNic());
         }
+        if (request.getDistrict() != null) {
+            user.setDistrict(request.getDistrict());
+        }
+        if (request.getProvince() != null) {
+            user.setProvince(request.getProvince());
+        }
 
         // Update role if provided
         if (request.getRoleId() != null) {
             Role role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + request.getRoleId()));
             user.setRole(role);
+        }
+
+        // Update scan center if provided
+        if (request.getScanCenterId() != null) {
+            user.setScanCenter(resolveScanCenter(request.getScanCenterId()));
         }
 
         User updatedUser = userRepository.save(user);
@@ -179,6 +196,12 @@ public class UserServiceImpl implements IUserService {
         userRepository.delete(user);
     }
 
+    private ScanCenter resolveScanCenter(Long scanCenterId) {
+        if (scanCenterId == null) return null;
+        return scanCenterRepository.findById(scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId));
+    }
+
     private UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
@@ -188,6 +211,10 @@ public class UserServiceImpl implements IUserService {
                 .lastName(user.getLastName())
                 .contactNumber(user.getContactNumber())
                 .nic(user.getNic())
+                .district(user.getDistrict())
+                .province(user.getProvince())
+                .scanCenterId(user.getScanCenter() != null ? user.getScanCenter().getId() : null)
+                .scanCenterName(user.getScanCenter() != null ? user.getScanCenter().getName() : null)
                 .role(RoleResponse.builder()
                         .id(user.getRole().getId())
                         .name(user.getRole().getName())

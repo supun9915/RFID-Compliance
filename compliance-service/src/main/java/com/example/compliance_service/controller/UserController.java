@@ -49,11 +49,11 @@ public class UserController {
     }
 
     /**
-     * Create a new user (SuperAdmin or Admin only)
+     * Create a new user (SuperAdmin, System Admin or Admin only)
      * POST /api/users
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createUser(@Valid @RequestBody RegisterRequest request) {
         UserResponse user = userService.createUser(request);
         return ResponseEntity
@@ -62,11 +62,11 @@ public class UserController {
     }
 
     /**
-     * Update user (SuperAdmin, Admin, or own profile)
+     * Update user (SuperAdmin, System Admin or Admin only)
      * PUT /api/users/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request) {
@@ -75,11 +75,11 @@ public class UserController {
     }
 
     /**
-     * Delete user (SuperAdmin or Admin only)
+     * Delete user (SuperAdmin or System Admin only)
      * DELETE /api/users/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));

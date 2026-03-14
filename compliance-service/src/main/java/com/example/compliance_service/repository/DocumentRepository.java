@@ -1,6 +1,7 @@
 package com.example.compliance_service.repository;
 
 import com.example.compliance_service.entity.Document;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,4 +25,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query("SELECT d FROM Document d WHERE d.endDate BETWEEN :startDate AND :endDate")
     List<Document> findDocumentsExpiringSoon(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    boolean existsByVehicleIdAndDocumentTypeId(@NotNull(message = "Vehicle ID is required") Long vehicleId, @NotNull(message = "Document type ID is required") Long documentTypeId);
 }

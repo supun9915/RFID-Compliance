@@ -3,8 +3,10 @@ package com.example.compliance_service.service.impl;
 import com.example.compliance_service.dto.request.ReaderRequest;
 import com.example.compliance_service.dto.response.ReaderResponse;
 import com.example.compliance_service.entity.Reader;
+import com.example.compliance_service.entity.ScanCenter;
 import com.example.compliance_service.exception.ResourceNotFoundException;
 import com.example.compliance_service.repository.ReaderRepository;
+import com.example.compliance_service.repository.ScanCenterRepository;
 import com.example.compliance_service.service.IReaderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class ReaderServiceImpl implements IReaderService {
 
     private final ReaderRepository readerRepository;
+    private final ScanCenterRepository scanCenterRepository;
 
     @Override
     public List<ReaderResponse> getAllReaders() {
@@ -51,10 +54,16 @@ public class ReaderServiceImpl implements IReaderService {
     @Override
     @Transactional
     public ReaderResponse createReader(ReaderRequest request) {
+        ScanCenter scanCenter = resolveScanCenter(request.getScanCenterId());
+
         Reader reader = Reader.builder()
                 .name(request.getName())
                 .location(request.getLocation())
                 .ipAddress(request.getIpAddress())
+                .serialNumber(request.getSerialNumber())
+                .model(request.getModel())
+                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .scanCenter(scanCenter)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -69,9 +78,17 @@ public class ReaderServiceImpl implements IReaderService {
         Reader reader = readerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + id));
 
+        ScanCenter scanCenter = resolveScanCenter(request.getScanCenterId());
+
         reader.setName(request.getName());
         reader.setLocation(request.getLocation());
         reader.setIpAddress(request.getIpAddress());
+        reader.setSerialNumber(request.getSerialNumber());
+        reader.setModel(request.getModel());
+        if (request.getIsActive() != null) {
+            reader.setIsActive(request.getIsActive());
+        }
+        reader.setScanCenter(scanCenter);
         reader.setUpdatedAt(LocalDateTime.now());
 
         Reader updatedReader = readerRepository.save(reader);
@@ -87,12 +104,23 @@ public class ReaderServiceImpl implements IReaderService {
         readerRepository.deleteById(id);
     }
 
+    private ScanCenter resolveScanCenter(Long scanCenterId) {
+        if (scanCenterId == null) return null;
+        return scanCenterRepository.findById(scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId));
+    }
+
     private ReaderResponse mapToResponse(Reader reader) {
         return ReaderResponse.builder()
                 .id(reader.getId())
                 .name(reader.getName())
                 .location(reader.getLocation())
                 .ipAddress(reader.getIpAddress())
+                .serialNumber(reader.getSerialNumber())
+                .model(reader.getModel())
+                .isActive(reader.getIsActive())
+                .scanCenterId(reader.getScanCenter() != null ? reader.getScanCenter().getId() : null)
+                .scanCenterName(reader.getScanCenter() != null ? reader.getScanCenter().getName() : null)
                 .createdAt(reader.getCreatedAt())
                 .updatedAt(reader.getUpdatedAt())
                 .build();

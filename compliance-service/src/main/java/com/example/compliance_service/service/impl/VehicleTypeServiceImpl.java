@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,10 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
     public VehicleTypeResponse createVehicleType(VehicleTypeRequest request) {
         VehicleType vehicleType = VehicleType.builder()
                 .name(request.getName())
+                .description(request.getDescription())
                 .zplCode(request.getZplCode())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         VehicleType savedVehicleType = vehicleTypeRepository.save(vehicleType);
@@ -52,7 +56,9 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle type not found with id: " + id));
 
         vehicleType.setName(request.getName());
+        vehicleType.setDescription(request.getDescription());
         vehicleType.setZplCode(request.getZplCode());
+        vehicleType.setUpdatedAt(LocalDateTime.now());
 
         VehicleType updatedVehicleType = vehicleTypeRepository.save(vehicleType);
         return mapToResponse(updatedVehicleType);
@@ -71,7 +77,10 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
         return VehicleTypeResponse.builder()
                 .id(vehicleType.getId())
                 .name(vehicleType.getName())
+                .description(vehicleType.getDescription())
                 .zplCode(vehicleType.getZplCode())
+                .createdAt(vehicleType.getCreatedAt())
+                .updatedAt(vehicleType.getUpdatedAt())
                 .build();
     }
 }

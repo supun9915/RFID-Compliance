@@ -17,6 +17,8 @@ public class VehicleRequest {
     @NotNull(message = "Vehicle type ID is required")
     private Long vehicleTypeId;
 
+    private Long vehicleModelId;
+
     @NotNull(message = "Owner ID is required")
     private Long ownerId;
 
@@ -24,9 +26,11 @@ public class VehicleRequest {
     @Size(max = 100, message = "Registration number must be at most 100 characters")
     private String registrationNumber;
 
-    @NotBlank(message = "EPC is required")
-    @Size(max = 100, message = "EPC must be at most 100 characters")
-    private String epc;
+    @Size(max = 100, message = "Vehicle number must be at most 100 characters")
+    private String vehicleNumber;
+
+    @Size(max = 100, message = "Chassis number must be at most 100 characters")
+    private String chassisNumber;
 
     private Integer registeredYear;
 }

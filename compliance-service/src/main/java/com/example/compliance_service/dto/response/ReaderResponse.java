@@ -17,6 +17,11 @@ public class ReaderResponse {
     private String name;
     private String location;
     private String ipAddress;
+    private String serialNumber;
+    private String model;
+    private Boolean isActive;
+    private Long scanCenterId;
+    private String scanCenterName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -75,7 +75,7 @@ public class VehicleController {
      * POST /api/vehicles
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> createVehicle(@Valid @RequestBody VehicleRequest request) {
         VehicleResponse vehicle = vehicleService.createVehicle(request);
         return ResponseEntity
@@ -88,7 +88,7 @@ public class VehicleController {
      * PUT /api/vehicles/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest request) {

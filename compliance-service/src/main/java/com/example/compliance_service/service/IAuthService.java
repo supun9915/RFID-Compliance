@@ -22,4 +22,12 @@ public interface IAuthService {
      * @return Authentication response with JWT token
      */
     AuthResponse login(LoginRequest request);
+
+    /**
+     * Logout user and invalidate refresh token
+     * @param token JWT token to invalidate
+     * @return Logout response message
+     */
+    String logout(String token);
+
 }
