@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { DataTable } from "../components/Shared/DataTable";
-import { getUsers, createUser, updateUser } from "../api/usersApi";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  getUsersByRole,
+} from "../api/usersApi";
 
 const ROLE_OPTIONS = [
   { id: 1, name: "SUPERADMIN" },
@@ -35,7 +40,7 @@ export function Owners() {
   const fetchUsers = async () => {
     setLoading(true);
     setFetchError(null);
-    const response = await getUsers();
+    const response = await getUsersByRole("OWNER");
     if (
       response &&
       !response.error &&

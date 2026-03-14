@@ -2,16 +2,18 @@ package com.example.compliance_service.service.impl;
 
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
-import com.example.compliance_service.dto.response.RoleResponse;
-import com.example.compliance_service.dto.response.UserResponse;
+import com.example.compliance_service.dto.response.*;
 import com.example.compliance_service.entity.Role;
 import com.example.compliance_service.entity.ScanCenter;
 import com.example.compliance_service.entity.User;
+import com.example.compliance_service.entity.Vehicle;
 import com.example.compliance_service.exception.ResourceNotFoundException;
 import com.example.compliance_service.exception.UserAlreadyExistsException;
+import com.example.compliance_service.repository.DocumentRepository;
 import com.example.compliance_service.repository.RoleRepository;
 import com.example.compliance_service.repository.ScanCenterRepository;
 import com.example.compliance_service.repository.UserRepository;
+import com.example.compliance_service.repository.VehicleRepository;
 import com.example.compliance_service.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,6 +35,8 @@ public class UserServiceImpl implements IUserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ScanCenterRepository scanCenterRepository;
+    private final VehicleRepository vehicleRepository;
+    private final DocumentRepository documentRepository;
 
     @Override
     public List<UserResponse> getUsers(Map<String, Object> params) {
@@ -48,22 +53,27 @@ public class UserServiceImpl implements IUserService {
 
             params.forEach((key, value) -> {
                 if (value != null && !value.toString().isEmpty()) {
+                    // Handle role filter specially — join to role and match by name
+                    if ("role".equalsIgnoreCase(key)) {
+                        jakarta.persistence.criteria.Join<?, ?> roleJoin = root.join("role");
+                        predicates.add(criteriaBuilder.like(
+                                criteriaBuilder.lower(roleJoin.get("name").as(String.class)),
+                                "%" + value.toString().toLowerCase() + "%"
+                        ));
+                        return;
+                    }
                     try {
-                        // Check if the field exists in User entity
                         var field = root.get(key);
                         Class<?> fieldType = field.getJavaType();
 
                         if (fieldType.equals(Long.class) || fieldType.equals(long.class)) {
-                            // Exact match for ID fields
                             predicates.add(criteriaBuilder.equal(field, Long.parseLong(value.toString())));
                         } else if (fieldType.equals(String.class)) {
-                            // Case-insensitive LIKE match for String fields
                             predicates.add(criteriaBuilder.like(
                                     criteriaBuilder.lower(field.as(String.class)),
                                     "%" + value.toString().toLowerCase() + "%"
                             ));
                         } else {
-                            // Exact match for other types
                             predicates.add(criteriaBuilder.equal(field, value));
                         }
                     } catch (IllegalArgumentException e) {
@@ -74,6 +84,114 @@ public class UserServiceImpl implements IUserService {
 
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
+    }
+
+    @Override
+    public List<OwnerUserResponse> getOwnerUsers(Map<String, Object> params) {
+        Specification<User> spec = buildSpecification(params);
+        List<User> users = userRepository.findAll(spec);
+        return users.stream()
+                .map(this::mapToOwnerUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    private OwnerUserResponse mapToOwnerUserResponse(User user) {
+        List<Vehicle> vehicles = vehicleRepository.findByOwnerId(user.getId());
+        List<OwnerVehicleResponse> vehicleResponses = vehicles.stream()
+                .map(this::mapToOwnerVehicleResponse)
+                .collect(Collectors.toList());
+
+        return OwnerUserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .contactNumber(user.getContactNumber())
+                .nic(user.getNic())
+                .district(user.getDistrict())
+                .province(user.getProvince())
+                .scanCenterId(user.getScanCenter() != null ? user.getScanCenter().getId() : null)
+                .scanCenterName(user.getScanCenter() != null ? user.getScanCenter().getName() : null)
+                .role(RoleResponse.builder()
+                        .id(user.getRole().getId())
+                        .name(user.getRole().getName())
+                        .description(user.getRole().getDescription())
+                        .build())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .vehicles(vehicleResponses)
+                .build();
+    }
+
+    private OwnerVehicleResponse mapToOwnerVehicleResponse(Vehicle vehicle) {
+        List<DocumentResponse> documentResponses = documentRepository.findByVehicleId(vehicle.getId())
+                .stream()
+                .map(doc -> DocumentResponse.builder()
+                        .id(doc.getId())
+                        .vehicleId(vehicle.getId())
+                        .vehicleRegistrationNumber(vehicle.getRegistrationNumber())
+                        .documentType(doc.getDocumentType() != null
+                                ? DocumentTypeResponse.builder()
+                                        .id(doc.getDocumentType().getId())
+                                        .name(doc.getDocumentType().getName())
+                                        .description(doc.getDocumentType().getDescription())
+                                        .build()
+                                : null)
+                        .referenceNumber(doc.getReferenceNumber())
+                        .imageUrl(doc.getImageUrl())
+                        .startDate(doc.getStartDate())
+                        .endDate(doc.getEndDate())
+                        .createdAt(doc.getCreatedAt())
+                        .updatedAt(doc.getUpdatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        VehicleTypeResponse vehicleTypeResponse = vehicle.getVehicleType() != null
+                ? VehicleTypeResponse.builder()
+                        .id(vehicle.getVehicleType().getId())
+                        .name(vehicle.getVehicleType().getName())
+                        .description(vehicle.getVehicleType().getDescription())
+                        .zplCode(vehicle.getVehicleType().getZplCode())
+                        .createdAt(vehicle.getVehicleType().getCreatedAt())
+                        .updatedAt(vehicle.getVehicleType().getUpdatedAt())
+                        .build()
+                : null;
+
+        VehicleModelResponse vehicleModelResponse = null;
+        if (vehicle.getVehicleModel() != null) {
+            VehicleMakeResponse makeResponse = vehicle.getVehicleModel().getMake() != null
+                    ? VehicleMakeResponse.builder()
+                            .id(vehicle.getVehicleModel().getMake().getId())
+                            .name(vehicle.getVehicleModel().getMake().getName())
+                            .description(vehicle.getVehicleModel().getMake().getDescription())
+                            .createdAt(vehicle.getVehicleModel().getMake().getCreatedAt())
+                            .updatedAt(vehicle.getVehicleModel().getMake().getUpdatedAt())
+                            .build()
+                    : null;
+            vehicleModelResponse = VehicleModelResponse.builder()
+                    .id(vehicle.getVehicleModel().getId())
+                    .name(vehicle.getVehicleModel().getName())
+                    .description(vehicle.getVehicleModel().getDescription())
+                    .make(makeResponse)
+                    .createdAt(vehicle.getVehicleModel().getCreatedAt())
+                    .updatedAt(vehicle.getVehicleModel().getUpdatedAt())
+                    .build();
+        }
+
+        return OwnerVehicleResponse.builder()
+                .id(vehicle.getId())
+                .vehicleType(vehicleTypeResponse)
+                .vehicleModel(vehicleModelResponse)
+                .registrationNumber(vehicle.getRegistrationNumber())
+                .vehicleNumber(vehicle.getVehicleNumber())
+                .chassisNumber(vehicle.getChassisNumber())
+                .epc(vehicle.getEpc())
+                .registeredYear(vehicle.getRegisteredYear())
+                .createdAt(vehicle.getCreatedAt())
+                .updatedAt(vehicle.getUpdatedAt())
+                .documents(documentResponses)
+                .build();
     }
 
     @Override

@@ -5,6 +5,8 @@ import { Dashboard } from "./pages/Dashboard";
 import { Owners } from "./pages/Owners";
 import { DocumentTypes } from "./pages/DocumentTypes";
 import { VehicleTypes } from "./pages/VehicleTypes";
+import { VehicleMakes } from "./pages/VehicleMakes";
+import { VehicleModels } from "./pages/VehicleModels";
 import { Entrances } from "./pages/Entrances";
 import { AdminUsers } from "./pages/AdminUsers";
 import { Settings } from "./pages/Settings";
@@ -30,6 +32,10 @@ export function App() {
         return <DocumentTypes />;
       case "vehicles":
         return <VehicleTypes />;
+      case "vehicleMakes":
+        return <VehicleMakes />;
+      case "vehicleModels":
+        return <VehicleModels />;
       case "entrances":
         return <Entrances />;
       case "admins":

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Edit2,
   Trash2,
@@ -12,6 +12,18 @@ import {
   Plus,
 } from "lucide-react";
 export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+
+  const handleRowsPerPageChange = (e) => {
+    setRowsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -63,7 +75,7 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data.map((row, idx) => (
+              {paginatedData.map((row, idx) => (
                 <tr
                   key={idx}
                   className="hover:bg-gray-50 transition-colors group"
@@ -75,7 +87,7 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
                         : row[col.key]}
                     </td>
                   ))}
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 transition-opacity">
                       <button
                         className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
@@ -112,40 +124,54 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
         {/* Pagination Footer */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            0 of {data.length} row(s) selected
+            {data.length === 0
+              ? "No rows"
+              : `${startIndex + 1}–${Math.min(startIndex + rowsPerPage, data.length)} of ${data.length} row(s)`}
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <span>Rows per page</span>
-              <select className="bg-white border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500">
-                <option>10</option>
-                <option>25</option>
-                <option>50</option>
+              <select
+                value={rowsPerPage}
+                onChange={handleRowsPerPageChange}
+                className="bg-white border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
               </select>
             </div>
-            <span>Page 1 of 1</span>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
             <div className="flex items-center gap-1">
               <button
                 className="p-1 hover:bg-gray-200 rounded disabled:opacity-50"
-                disabled
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
               >
                 <ChevronsLeft className="w-4 h-4" />
               </button>
               <button
                 className="p-1 hover:bg-gray-200 rounded disabled:opacity-50"
-                disabled
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 className="p-1 hover:bg-gray-200 rounded disabled:opacity-50"
-                disabled
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
               <button
                 className="p-1 hover:bg-gray-200 rounded disabled:opacity-50"
-                disabled
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
               >
                 <ChevronsRight className="w-4 h-4" />
               </button>

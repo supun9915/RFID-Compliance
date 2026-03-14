@@ -3,6 +3,7 @@ package com.example.compliance_service.controller;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
+import com.example.compliance_service.dto.response.OwnerUserResponse;
 import com.example.compliance_service.dto.response.UserResponse;
 import com.example.compliance_service.service.IUserService;
 import jakarta.validation.Valid;
@@ -27,11 +28,17 @@ public class UserController {
     /**
      * Search/filter users by query parameters (Admin only)
      * GET /api/users?id=1&username=john&email=john@example.com&firstName=John&lastName=Doe
+     * GET /api/users?role=OWNER  — returns owner users with all assigned vehicles and documents
      * Any parameter matching User entity field will be used for filtering
      * If no params provided, returns all users
      */
     @GetMapping
     public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
+        String roleParam = params.containsKey("role") ? params.get("role").toString().toUpperCase() : null;
+        if ("OWNER".equals(roleParam)) {
+            List<OwnerUserResponse> owners = userService.getOwnerUsers(params);
+            return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", owners));
+        }
         List<UserResponse> users = userService.getUsers(params);
         return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
     }

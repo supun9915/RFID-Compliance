@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   LogOut,
   Settings,
+  Factory,
+  Layers,
 } from "lucide-react";
 export function Sidebar({ activePage, onNavigate }) {
   const navItems = [
@@ -40,6 +42,16 @@ export function Sidebar({ activePage, onNavigate }) {
       id: "admins",
       icon: ShieldCheck,
       label: "Admin Users",
+    },
+    {
+      id: "vehicleMakes",
+      icon: Factory,
+      label: "Vehicle Makes",
+    },
+    {
+      id: "vehicleModels",
+      icon: Layers,
+      label: "Vehicle Models",
     },
   ];
 
