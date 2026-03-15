@@ -35,11 +35,6 @@ export function Sidebar({ activePage, onNavigate }) {
       label: "Vehicle Type",
     },
     {
-      id: "entrances",
-      icon: BoomBox,
-      label: "Entrances",
-    },
-    {
       id: "scanCenters",
       icon: Radar,
       label: "Scan Centers",

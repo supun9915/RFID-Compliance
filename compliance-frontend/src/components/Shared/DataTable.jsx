@@ -83,7 +83,7 @@ export function DataTable({
                   </th>
                 ))}
                 {showActions && (
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+                  <th className="sticky right-0 z-20 px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center bg-gray-50 border-l border-gray-200">
                     Actions
                   </th>
                 )}
@@ -103,7 +103,7 @@ export function DataTable({
                     </td>
                   ))}
                   {showActions && (
-                    <td className="px-6 py-3 text-center">
+                    <td className="sticky right-0 z-10 px-6 py-3 text-center bg-white group-hover:bg-gray-50 border-l border-gray-100">
                       <div className="flex items-center justify-center gap-2 transition-opacity">
                         <button
                           className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"

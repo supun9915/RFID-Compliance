@@ -245,7 +245,7 @@ public class UserServiceImpl implements IUserService {
                 .nic(request.getNic())
                 .district(request.getDistrict())
                 .province(request.getProvince())
-                .scanCenter(resolveScanCenter(request.getScanCenterId()))
+                .scanCenter(request.getScanCenterId() != null ? resolveScanCenter(request.getScanCenterId()) : null)
                 .role(role)
                 .build();
 

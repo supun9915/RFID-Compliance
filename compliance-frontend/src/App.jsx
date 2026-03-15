@@ -7,7 +7,6 @@ import { DocumentTypes } from "./pages/DocumentTypes";
 import { VehicleTypes } from "./pages/VehicleTypes";
 import { VehicleMakes } from "./pages/VehicleMakes";
 import { VehicleModels } from "./pages/VehicleModels";
-import { Entrances } from "./pages/Entrances";
 import { ScanCenters } from "./pages/ScanCenters";
 import { AdminUsers } from "./pages/AdminUsers";
 import { Settings } from "./pages/Settings";
@@ -37,8 +36,6 @@ export function App() {
         return <VehicleMakes />;
       case "vehicleModels":
         return <VehicleModels />;
-      case "entrances":
-        return <Entrances />;
       case "scanCenters":
         return <ScanCenters />;
       case "admins":
