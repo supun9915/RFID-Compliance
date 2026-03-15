@@ -15,8 +15,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -34,10 +36,20 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
-        String roleParam = params.containsKey("role") ? params.get("role").toString().toUpperCase() : null;
-        if ("OWNER".equals(roleParam)) {
-            List<OwnerUserResponse> owners = userService.getOwnerUsers(params);
-            return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", owners));
+        if (params.containsKey("role")) {
+            List<String> roles = Arrays.stream(params.get("role").toString().split(","))
+                    .map(String::trim)
+                    .map(String::toUpperCase)
+                    .filter(r -> !r.isEmpty())
+                    .collect(Collectors.toList());
+
+            // Replace the raw string with the parsed list so the service can use it
+            params.put("role", roles);
+
+            if (roles.size() == 1 && "OWNER".equals(roles.get(0))) {
+                List<OwnerUserResponse> owners = userService.getOwnerUsers(params);
+                return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", owners));
+            }
         }
         List<UserResponse> users = userService.getUsers(params);
         return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));

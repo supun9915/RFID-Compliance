@@ -56,10 +56,20 @@ public class UserServiceImpl implements IUserService {
                     // Handle role filter specially — join to role and match by name
                     if ("role".equalsIgnoreCase(key)) {
                         jakarta.persistence.criteria.Join<?, ?> roleJoin = root.join("role");
-                        predicates.add(criteriaBuilder.like(
-                                criteriaBuilder.lower(roleJoin.get("name").as(String.class)),
-                                "%" + value.toString().toLowerCase() + "%"
-                        ));
+                        if (value instanceof java.util.List<?> roleList && !((java.util.List<?>) roleList).isEmpty()) {
+                            // Multiple roles: use IN with exact (case-insensitive) match
+                            List<String> upperRoles = ((java.util.List<?>) roleList).stream()
+                                    .map(r -> r.toString().toUpperCase())
+                                    .collect(Collectors.toList());
+                            predicates.add(criteriaBuilder.upper(roleJoin.get("name").as(String.class))
+                                    .in(upperRoles));
+                        } else {
+                            // Single role string: keep original LIKE behaviour
+                            predicates.add(criteriaBuilder.like(
+                                    criteriaBuilder.lower(roleJoin.get("name").as(String.class)),
+                                    "%" + value.toString().toLowerCase() + "%"
+                            ));
+                        }
                         return;
                     }
                     try {

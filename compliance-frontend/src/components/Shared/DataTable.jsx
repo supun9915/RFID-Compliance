@@ -11,7 +11,18 @@ import {
   ChevronsRight,
   Plus,
 } from "lucide-react";
-export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
+export function DataTable({
+  title,
+  columns,
+  data,
+  onAdd,
+  onEdit,
+  onDelete,
+  showAddButton = true,
+  showActions = true,
+  showDeleteAction = true,
+  showToggleAction = true,
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -45,13 +56,15 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
               />
             </svg>
           </button>
-          <button
-            onClick={onAdd}
-            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add {title}
-          </button>
+          {showAddButton && (
+            <button
+              onClick={onAdd}
+              className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add {title}
+            </button>
+          )}
         </div>
       </div>
 
@@ -69,9 +82,11 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
                     {col.label}
                   </th>
                 ))}
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
-                  Actions
-                </th>
+                {showActions && (
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -87,34 +102,40 @@ export function DataTable({ title, columns, data, onAdd, onEdit, onDelete }) {
                         : row[col.key]}
                     </td>
                   ))}
-                  <td className="px-6 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 transition-opacity">
-                      <button
-                        className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                        title="Edit"
-                        onClick={() => onEdit && onEdit(row)}
-                      >
-                        <Edit2 className="w-4 h-4 text-blue-600" />
-                      </button>
-                      <button
-                        className="p-1.5 text-gray-400  hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                        title="Delete"
-                        onClick={() => onDelete && onDelete(row)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                      <button
-                        className="p-1.5 text-gray-400 hover:text-gray-900 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
-                        title="Toggle Status"
-                      >
-                        {row.active !== false ? (
-                          <ToggleRight className="w-5 h-5 text-emerald-500" />
-                        ) : (
-                          <ToggleLeft className="w-5 h-5 text-gray-300" />
+                  {showActions && (
+                    <td className="px-6 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2 transition-opacity">
+                        <button
+                          className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                          title="Edit"
+                          onClick={() => onEdit && onEdit(row)}
+                        >
+                          <Edit2 className="w-4 h-4 text-blue-600" />
+                        </button>
+                        {showDeleteAction && (
+                          <button
+                            className="p-1.5 text-gray-400  hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                            title="Delete"
+                            onClick={() => onDelete && onDelete(row)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
                         )}
-                      </button>
-                    </div>
-                  </td>
+                        {showToggleAction && (
+                          <button
+                            className="p-1.5 text-gray-400 hover:text-gray-900 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                            title="Toggle Status"
+                          >
+                            {row.active !== false ? (
+                              <ToggleRight className="w-5 h-5 text-emerald-500" />
+                            ) : (
+                              <ToggleLeft className="w-5 h-5 text-gray-300" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

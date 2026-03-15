@@ -10,6 +10,7 @@ import {
   Settings,
   Factory,
   Layers,
+  Radar,
 } from "lucide-react";
 export function Sidebar({ activePage, onNavigate }) {
   const navItems = [
@@ -37,6 +38,11 @@ export function Sidebar({ activePage, onNavigate }) {
       id: "entrances",
       icon: BoomBox,
       label: "Entrances",
+    },
+    {
+      id: "scanCenters",
+      icon: Radar,
+      label: "Scan Centers",
     },
     {
       id: "admins",
