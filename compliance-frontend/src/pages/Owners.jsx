@@ -6,14 +6,8 @@ import {
   createUser,
   updateUser,
   getUsersByRole,
+  getRoles,
 } from "../api/usersApi";
-
-const ROLE_OPTIONS = [
-  { id: 1, name: "SUPERADMIN" },
-  { id: 2, name: "ADMIN" },
-  { id: 3, name: "OWNER" },
-  { id: 4, name: "POLICE" },
-];
 
 const EMPTY_FORM = {
   username: "",
@@ -23,13 +17,14 @@ const EMPTY_FORM = {
   lastName: "",
   contactNumber: "",
   nic: "",
-  roleId: 3,
+  roleId: null,
 };
 
 export function Owners() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [ownerRoleId, setOwnerRoleId] = useState(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -61,11 +56,17 @@ export function Owners() {
 
   useEffect(() => {
     fetchUsers();
+    getRoles().then((res) => {
+      if (res.success) {
+        const ownerRole = res.data.find((r) => r.name === "OWNER");
+        if (ownerRole) setOwnerRoleId(ownerRole.id);
+      }
+    });
   }, []);
 
   const openCreateModal = () => {
     setEditingUser(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, roleId: ownerRoleId });
     setFormError(null);
     setModalOpen(true);
   };
@@ -80,7 +81,7 @@ export function Owners() {
       lastName: user.lastName || "",
       contactNumber: user.contactNumber || "",
       nic: user.nic || "",
-      roleId: user.role?.id || 3,
+      roleId: user.role?.id ?? ownerRoleId,
     });
     setFormError(null);
     setModalOpen(true);
@@ -304,25 +305,6 @@ export function Owners() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
                   />
                 </div>
-              </div>
-
-              {/* Role */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="roleId"
-                  value={form.roleId}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white"
-                >
-                  {ROLE_OPTIONS.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Error */}

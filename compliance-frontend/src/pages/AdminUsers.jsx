@@ -12,6 +12,13 @@ const ADMIN_ROLE_NAMES = [
   "SCAN_CENTER_USER",
 ];
 
+const MODAL_ROLE_NAMES = [
+  "SYSTEM_ADMIN",
+  "ADMIN",
+  "SCAN_CENTER_ADMIN",
+  "SCAN_CENTER_USER",
+];
+
 const ROLE_FALLBACK_IDS = {
   SYSTEM_ADMIN: 1,
   ADMIN: 2,
@@ -106,12 +113,12 @@ export function AdminUsers() {
     users.forEach((user) => {
       const id = user.role?.id;
       const name = user.role?.name;
-      if (id && name && ADMIN_ROLE_NAMES.includes(name)) {
+      if (id && name && MODAL_ROLE_NAMES.includes(name)) {
         deduped.set(name, { id, name });
       }
     });
 
-    ADMIN_ROLE_NAMES.forEach((name) => {
+    MODAL_ROLE_NAMES.forEach((name) => {
       if (!deduped.has(name)) {
         deduped.set(name, {
           id: ROLE_FALLBACK_IDS[name],
@@ -471,7 +478,8 @@ export function AdminUsers() {
                     value={form.scanCenterId}
                     onChange={handleChange}
                     required={requiresScanCenter}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white"
+                    disabled={!requiresScanCenter}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
                     <option value="">No scan center</option>
                     {scanCenters.map((scanCenter) => (

@@ -2,9 +2,11 @@ package com.example.compliance_service.controller;
 
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
+import com.example.compliance_service.dto.request.VehicleOwnerRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.OwnerUserResponse;
 import com.example.compliance_service.dto.response.UserResponse;
+import com.example.compliance_service.dto.response.VehicleUserResponse;
 import com.example.compliance_service.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +80,29 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("User created successfully", user));
+    }
+
+    /**
+     * Create a new vehicle owner user (SuperAdmin, System Admin or Admin only)
+     * POST /api/users/owner/{id}
+     */
+    @PostMapping("/owner/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    public ResponseEntity<?> createOwnerUser( @PathVariable Long id, @Valid @RequestBody VehicleOwnerRequest vehicleOwnerRequest) {
+        VehicleUserResponse vehicleUserResponse = userService.createOwnerUser(id , vehicleOwnerRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Owner user created successfully", vehicleUserResponse));
+    }
+
+    /**
+     * Get user details by ID
+     * POST /api/users/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        VehicleUserResponse user = userService.getUserById(id);
+        return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", user));
     }
 
     /**

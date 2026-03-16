@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,8 +41,8 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .zplCode(request.getZplCode())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         VehicleType savedVehicleType = vehicleTypeRepository.save(vehicleType);
@@ -58,7 +58,7 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
         vehicleType.setName(request.getName());
         vehicleType.setDescription(request.getDescription());
         vehicleType.setZplCode(request.getZplCode());
-        vehicleType.setUpdatedAt(LocalDateTime.now());
+        vehicleType.setUpdatedAt(OffsetDateTime.now());
 
         VehicleType updatedVehicleType = vehicleTypeRepository.save(vehicleType);
         return mapToResponse(updatedVehicleType);

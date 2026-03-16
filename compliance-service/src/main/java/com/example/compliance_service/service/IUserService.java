@@ -2,8 +2,11 @@ package com.example.compliance_service.service;
 
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
+import com.example.compliance_service.dto.request.VehicleOwnerRequest;
 import com.example.compliance_service.dto.response.OwnerUserResponse;
 import com.example.compliance_service.dto.response.UserResponse;
+import com.example.compliance_service.dto.response.VehicleUserResponse;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -54,4 +57,8 @@ public interface IUserService {
      * @param id User ID
      */
     void deleteUser(Long id);
+
+    VehicleUserResponse createOwnerUser(Long id, @Valid VehicleOwnerRequest vehicleOwnerRequest);
+
+    VehicleUserResponse getUserById(Long id);
 }

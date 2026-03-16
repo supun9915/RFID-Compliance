@@ -1,6 +1,10 @@
 package com.example.compliance_service.dto.response;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -8,10 +12,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OwnerVehicleResponse {
+public class VehicleDocumentResponse {
     private Long id;
     private VehicleTypeResponse vehicleType;
     private VehicleModelResponse vehicleModel;
+    private UserResponse owner;
     private String registrationNumber;
     private String vehicleNumber;
     private String chassisNumber;

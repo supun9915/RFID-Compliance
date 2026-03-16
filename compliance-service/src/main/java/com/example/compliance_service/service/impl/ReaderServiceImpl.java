@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,8 +64,8 @@ public class ReaderServiceImpl implements IReaderService {
                 .model(request.getModel())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .scanCenter(scanCenter)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         Reader savedReader = readerRepository.save(reader);
@@ -89,7 +89,7 @@ public class ReaderServiceImpl implements IReaderService {
             reader.setIsActive(request.getIsActive());
         }
         reader.setScanCenter(scanCenter);
-        reader.setUpdatedAt(LocalDateTime.now());
+        reader.setUpdatedAt(OffsetDateTime.now());
 
         Reader updatedReader = readerRepository.save(reader);
         return mapToResponse(updatedReader);

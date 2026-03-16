@@ -3,7 +3,7 @@ package com.example.compliance_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "detection_history")
@@ -27,7 +27,7 @@ public class DetectionHistory {
 
 
     @Column(name = "detected_at")
-    private LocalDateTime detectedAt;
+    private OffsetDateTime detectedAt;
 
     @Column(name = "compliance_status", nullable = false, length = 50)
     private String complianceStatus;
@@ -36,6 +36,6 @@ public class DetectionHistory {
     private String violationDetails;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
 }

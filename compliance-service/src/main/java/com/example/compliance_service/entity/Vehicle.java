@@ -3,7 +3,7 @@ package com.example.compliance_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -46,10 +46,10 @@ public class Vehicle {
     private Integer registeredYear;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<Document> documents;

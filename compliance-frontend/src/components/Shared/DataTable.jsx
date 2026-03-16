@@ -69,10 +69,11 @@ export function DataTable({
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        {/* Scrollable table area */}
+        <div className="overflow-auto h-[680px]">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="sticky top-0 z-30 bg-gray-50 border-b border-gray-200">
               <tr>
                 {columns.map((col) => (
                   <th
@@ -83,7 +84,7 @@ export function DataTable({
                   </th>
                 ))}
                 {showActions && (
-                  <th className="sticky right-0 z-20 px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center bg-gray-50 border-l border-gray-200">
+                  <th className="sticky right-0 z-40 px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center bg-gray-50 border-l border-gray-200 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.15)]">
                     Actions
                   </th>
                 )}
@@ -103,7 +104,7 @@ export function DataTable({
                     </td>
                   ))}
                   {showActions && (
-                    <td className="sticky right-0 z-10 px-6 py-3 text-center bg-white group-hover:bg-gray-50 border-l border-gray-100">
+                    <td className="sticky right-0 z-20 px-6 py-3 text-center bg-white group-hover:bg-gray-50 border-l border-gray-100 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-center gap-2 transition-opacity">
                         <button
                           className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
@@ -142,7 +143,7 @@ export function DataTable({
           </table>
         </div>
 
-        {/* Pagination Footer */}
+        {/* Pagination Footer — always visible, outside the scroll area */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="text-sm text-gray-500">
             {data.length === 0

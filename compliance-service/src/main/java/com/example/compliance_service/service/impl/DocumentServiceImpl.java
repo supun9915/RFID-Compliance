@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,22 +58,22 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public List<DocumentResponse> getExpiredDocumentsByVehicleId(Long vehicleId) {
-        return documentRepository.findExpiredDocuments(vehicleId, LocalDateTime.now()).stream()
+        return documentRepository.findExpiredDocuments(vehicleId, OffsetDateTime.now()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DocumentResponse> getValidDocumentsByVehicleId(Long vehicleId) {
-        return documentRepository.findValidDocuments(vehicleId, LocalDateTime.now()).stream()
+        return documentRepository.findValidDocuments(vehicleId, OffsetDateTime.now()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DocumentResponse> getDocumentsExpiringSoon(int days) {
-        LocalDateTime startDate = LocalDateTime.now();
-        LocalDateTime endDate = startDate.plusDays(days);
+        OffsetDateTime startDate = OffsetDateTime.now();
+        OffsetDateTime endDate = startDate.plusDays(days);
         return documentRepository.findDocumentsExpiringSoon(startDate, endDate).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -106,8 +106,8 @@ public class DocumentServiceImpl implements IDocumentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .imageUrl(request.getImageUrl())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         Document savedDocument = documentRepository.save(document);
@@ -132,7 +132,7 @@ public class DocumentServiceImpl implements IDocumentService {
         document.setStartDate(request.getStartDate());
         document.setEndDate(request.getEndDate());
         document.setImageUrl(request.getImageUrl());
-        document.setUpdatedAt(LocalDateTime.now());
+        document.setUpdatedAt(OffsetDateTime.now());
 
         Document updatedDocument = documentRepository.save(document);
         return mapToResponse(updatedDocument);

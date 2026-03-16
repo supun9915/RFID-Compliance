@@ -87,3 +87,25 @@ export const deleteUser = (userId) => request(`/users/${userId}`, "DELETE");
  */
 export const getUsersByRole = (roleName) =>
   request("/users", GET, undefined, { role: roleName });
+
+/**
+ * Fetch all roles.
+ * @returns {Promise<{ success: boolean, data: Array, message: string }>}
+ */
+export const getRoles = async () => {
+  const response = await request("/roles", GET);
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to fetch roles";
+    return { success: false, data: [], message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: Array.isArray(response.data) ? response.data : [],
+    message: response.message,
+  };
+};

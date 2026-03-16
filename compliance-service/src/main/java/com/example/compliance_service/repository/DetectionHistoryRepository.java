@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
@@ -19,7 +19,7 @@ public interface DetectionHistoryRepository extends JpaRepository<DetectionHisto
     List<DetectionHistory> findByComplianceStatus(String complianceStatus);
 
     @Query("SELECT d FROM DetectionHistory d WHERE d.detectedAt BETWEEN :startDate AND :endDate")
-    List<DetectionHistory> findDetectionsBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<DetectionHistory> findDetectionsBetween(@Param("startDate") OffsetDateTime startDate, @Param("endDate") OffsetDateTime endDate);
 
     @Query("SELECT d FROM DetectionHistory d WHERE d.vehicle.id = :vehicleId ORDER BY d.detectedAt DESC")
     List<DetectionHistory> findLatestDetectionsByVehicle(@Param("vehicleId") Long vehicleId);

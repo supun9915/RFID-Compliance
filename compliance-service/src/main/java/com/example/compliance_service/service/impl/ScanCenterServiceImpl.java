@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,8 +58,8 @@ public class ScanCenterServiceImpl implements IScanCenterService {
                 .district(request.getDistrict())
                 .province(request.getProvince())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         ScanCenter savedScanCenter = scanCenterRepository.save(scanCenter);
@@ -80,7 +80,7 @@ public class ScanCenterServiceImpl implements IScanCenterService {
         if (request.getIsActive() != null) {
             scanCenter.setIsActive(request.getIsActive());
         }
-        scanCenter.setUpdatedAt(LocalDateTime.now());
+        scanCenter.setUpdatedAt(OffsetDateTime.now());
 
         ScanCenter updatedScanCenter = scanCenterRepository.save(scanCenter);
         return mapToResponse(updatedScanCenter);

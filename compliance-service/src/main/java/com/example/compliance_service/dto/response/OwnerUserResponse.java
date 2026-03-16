@@ -1,7 +1,7 @@
 package com.example.compliance_service.dto.response;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -21,7 +21,7 @@ public class OwnerUserResponse {
     private Long scanCenterId;
     private String scanCenterName;
     private RoleResponse role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private List<OwnerVehicleResponse> vehicles;
 }

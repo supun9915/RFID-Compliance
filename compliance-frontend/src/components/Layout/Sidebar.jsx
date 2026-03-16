@@ -20,11 +20,6 @@ export function Sidebar({ activePage, onNavigate }) {
       label: "Dashboard",
     },
     {
-      id: "owners",
-      icon: Users,
-      label: "Owners",
-    },
-    {
       id: "documents",
       icon: FileText,
       label: "Document Type",
@@ -38,6 +33,11 @@ export function Sidebar({ activePage, onNavigate }) {
       id: "scanCenters",
       icon: Radar,
       label: "Scan Centers",
+    },
+    {
+      id: "owners",
+      icon: Users,
+      label: "Owners",
     },
     {
       id: "admins",

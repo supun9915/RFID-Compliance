@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,8 +44,8 @@ public class VehicleMakeServiceImpl implements IVehicleMakeService {
         VehicleMake vehicleMake = VehicleMake.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         return mapToResponse(vehicleMakeRepository.save(vehicleMake));
@@ -64,7 +64,7 @@ public class VehicleMakeServiceImpl implements IVehicleMakeService {
 
         vehicleMake.setName(request.getName());
         vehicleMake.setDescription(request.getDescription());
-        vehicleMake.setUpdatedAt(LocalDateTime.now());
+        vehicleMake.setUpdatedAt(OffsetDateTime.now());
 
         return mapToResponse(vehicleMakeRepository.save(vehicleMake));
     }
