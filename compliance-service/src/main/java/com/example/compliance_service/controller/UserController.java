@@ -96,6 +96,19 @@ public class UserController {
     }
 
     /**
+     * Update a new vehicle owner user (SuperAdmin, System Admin or Admin only)
+     * PUT /api/users/owner/{id}
+     */
+    @PutMapping("/owner/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    public ResponseEntity<?> updateOwnerUser( @PathVariable Long id, @Valid @RequestBody VehicleOwnerRequest vehicleOwnerRequest) {
+        VehicleUserResponse vehicleUserResponse = userService.updateOwnerUser(id , vehicleOwnerRequest);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("Owner user updated successfully", vehicleUserResponse));
+    }
+
+    /**
      * Get user details by ID
      * POST /api/users/{id}
      */

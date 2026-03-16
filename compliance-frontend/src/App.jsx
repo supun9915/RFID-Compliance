@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { TopBar } from "./components/Layout/TopBar";
 import { Dashboard } from "./pages/Dashboard";
-import { Owners } from "./pages/Owners";
+import { Owners } from "./pages/Owners/Owners";
 import { DocumentTypes } from "./pages/DocumentTypes";
 import { VehicleTypes } from "./pages/VehicleTypes";
 import { VehicleMakes } from "./pages/VehicleMakes";

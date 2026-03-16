@@ -60,5 +60,7 @@ public interface IUserService {
 
     VehicleUserResponse createOwnerUser(Long id, @Valid VehicleOwnerRequest vehicleOwnerRequest);
 
+    VehicleUserResponse updateOwnerUser(Long vehicleId, @Valid VehicleOwnerRequest vehicleOwnerRequest);
+
     VehicleUserResponse getUserById(Long id);
 }

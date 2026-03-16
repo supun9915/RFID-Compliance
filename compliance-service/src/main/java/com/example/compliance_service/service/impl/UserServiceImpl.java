@@ -451,6 +451,271 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    @Transactional
+    public VehicleUserResponse updateOwnerUser(Long vehicleId, VehicleOwnerRequest vehicleOwnerRequest) {
+
+        // 1. Load vehicle
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleId));
+
+        // 2. Update vehicle fields
+        if (vehicleOwnerRequest.getVehicleTypeId() != null) {
+            vehicle.setVehicleType(resolveVehicleType(vehicleOwnerRequest.getVehicleTypeId()));
+        }
+        if (vehicleOwnerRequest.getVehicleModelId() != null) {
+            vehicle.setVehicleModel(resolveVehicleModel(vehicleOwnerRequest.getVehicleModelId()));
+        }
+        if (vehicleOwnerRequest.getOwnerId() != null) {
+            User newOwner = userRepository.findById(vehicleOwnerRequest.getOwnerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + vehicleOwnerRequest.getOwnerId()));
+            vehicle.setOwner(newOwner);
+        }
+        if (vehicleOwnerRequest.getRegistrationNumber() != null) {
+            vehicle.setRegistrationNumber(vehicleOwnerRequest.getRegistrationNumber());
+        }
+        if (vehicleOwnerRequest.getVehicleNumber() != null) {
+            vehicle.setVehicleNumber(vehicleOwnerRequest.getVehicleNumber());
+        }
+        if (vehicleOwnerRequest.getChassisNumber() != null) {
+            vehicle.setChassisNumber(vehicleOwnerRequest.getChassisNumber());
+        }
+        if (vehicleOwnerRequest.getRegisteredYear() != null) {
+            vehicle.setRegisteredYear(vehicleOwnerRequest.getRegisteredYear());
+        }
+        vehicle.setUpdatedAt(java.time.OffsetDateTime.now());
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+        // 3. Sync documents by documentTypeId
+        List<Document> existingDocuments = documentRepository.findByVehicleId(savedVehicle.getId());
+
+        if (vehicleOwnerRequest.getDocumentRequests() != null) {
+            // Build a map of existing docs keyed by documentTypeId for quick lookup
+            java.util.Map<Long, Document> existingByTypeId = existingDocuments.stream()
+                    .filter(d -> d.getDocumentType() != null)
+                    .collect(Collectors.toMap(
+                            d -> d.getDocumentType().getId(),
+                            d -> d,
+                            (a, b) -> a   // keep first if duplicates
+                    ));
+
+            // Collect incoming documentTypeIds
+            java.util.Set<Long> incomingTypeIds = vehicleOwnerRequest.getDocumentRequests().stream()
+                    .filter(r -> r.getDocumentTypeId() != null)
+                    .map(com.example.compliance_service.dto.request.DocumentRequest::getDocumentTypeId)
+                    .collect(Collectors.toSet());
+
+            // Delete documents whose documentTypeId is no longer in the request
+            existingDocuments.stream()
+                    .filter(d -> d.getDocumentType() == null || !incomingTypeIds.contains(d.getDocumentType().getId()))
+                    .forEach(documentRepository::delete);
+
+            // Add or update documents
+            for (com.example.compliance_service.dto.request.DocumentRequest docReq : vehicleOwnerRequest.getDocumentRequests()) {
+                if (docReq.getDocumentTypeId() == null) continue;
+
+                if (existingByTypeId.containsKey(docReq.getDocumentTypeId())) {
+                    // Update existing document
+                    Document existing = existingByTypeId.get(docReq.getDocumentTypeId());
+                    existing.setReferenceNumber(docReq.getReferenceNumber());
+                    existing.setImageUrl(docReq.getImageUrl());
+                    existing.setStartDate(docReq.getStartDate());
+                    existing.setEndDate(docReq.getEndDate());
+                    existing.setUpdatedAt(java.time.OffsetDateTime.now());
+                    documentRepository.save(existing);
+                } else {
+                    // Insert new document
+                    Document newDoc = Document.builder()
+                            .vehicle(savedVehicle)
+                            .documentType(resolveDocumentType(docReq.getDocumentTypeId()))
+                            .referenceNumber(docReq.getReferenceNumber())
+                            .imageUrl(docReq.getImageUrl())
+                            .startDate(docReq.getStartDate())
+                            .endDate(docReq.getEndDate())
+                            .createdAt(java.time.OffsetDateTime.now())
+                            .updatedAt(java.time.OffsetDateTime.now())
+                            .build();
+                    documentRepository.save(newDoc);
+                }
+            }
+        }
+
+        // 4. Reload fresh data and build response
+        Vehicle refreshedVehicle = vehicleRepository.findById(savedVehicle.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + savedVehicle.getId()));
+        User owner = refreshedVehicle.getOwner();
+        UserResponse ownerResponse = mapToUserResponse(owner);
+
+        List<DocumentResponse> documentResponses = documentRepository.findByVehicleId(refreshedVehicle.getId())
+                .stream()
+                .map(doc -> DocumentResponse.builder()
+                        .id(doc.getId())
+                        .vehicleId(refreshedVehicle.getId())
+                        .vehicleRegistrationNumber(refreshedVehicle.getRegistrationNumber())
+                        .documentType(doc.getDocumentType() != null
+                                ? DocumentTypeResponse.builder()
+                                        .id(doc.getDocumentType().getId())
+                                        .name(doc.getDocumentType().getName())
+                                        .description(doc.getDocumentType().getDescription())
+                                        .build()
+                                : null)
+                        .referenceNumber(doc.getReferenceNumber())
+                        .imageUrl(doc.getImageUrl())
+                        .startDate(doc.getStartDate())
+                        .endDate(doc.getEndDate())
+                        .createdAt(doc.getCreatedAt())
+                        .updatedAt(doc.getUpdatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        VehicleTypeResponse vehicleTypeResponse = refreshedVehicle.getVehicleType() != null
+                ? VehicleTypeResponse.builder()
+                        .id(refreshedVehicle.getVehicleType().getId())
+                        .name(refreshedVehicle.getVehicleType().getName())
+                        .description(refreshedVehicle.getVehicleType().getDescription())
+                        .zplCode(refreshedVehicle.getVehicleType().getZplCode())
+                        .createdAt(refreshedVehicle.getVehicleType().getCreatedAt())
+                        .updatedAt(refreshedVehicle.getVehicleType().getUpdatedAt())
+                        .build()
+                : null;
+
+        VehicleModelResponse vehicleModelResponse = null;
+        if (refreshedVehicle.getVehicleModel() != null) {
+            VehicleMakeResponse makeResponse = refreshedVehicle.getVehicleModel().getMake() != null
+                    ? VehicleMakeResponse.builder()
+                            .id(refreshedVehicle.getVehicleModel().getMake().getId())
+                            .name(refreshedVehicle.getVehicleModel().getMake().getName())
+                            .description(refreshedVehicle.getVehicleModel().getMake().getDescription())
+                            .createdAt(refreshedVehicle.getVehicleModel().getMake().getCreatedAt())
+                            .updatedAt(refreshedVehicle.getVehicleModel().getMake().getUpdatedAt())
+                            .build()
+                    : null;
+            vehicleModelResponse = VehicleModelResponse.builder()
+                    .id(refreshedVehicle.getVehicleModel().getId())
+                    .name(refreshedVehicle.getVehicleModel().getName())
+                    .description(refreshedVehicle.getVehicleModel().getDescription())
+                    .make(makeResponse)
+                    .createdAt(refreshedVehicle.getVehicleModel().getCreatedAt())
+                    .updatedAt(refreshedVehicle.getVehicleModel().getUpdatedAt())
+                    .build();
+        }
+
+        VehicleDocumentResponse vehicleDocumentResponse = VehicleDocumentResponse.builder()
+                .id(refreshedVehicle.getId())
+                .vehicleType(vehicleTypeResponse)
+                .vehicleModel(vehicleModelResponse)
+                .owner(ownerResponse)
+                .registrationNumber(refreshedVehicle.getRegistrationNumber())
+                .vehicleNumber(refreshedVehicle.getVehicleNumber())
+                .chassisNumber(refreshedVehicle.getChassisNumber())
+                .epc(refreshedVehicle.getEpc())
+                .registeredYear(refreshedVehicle.getRegisteredYear())
+                .createdAt(refreshedVehicle.getCreatedAt())
+                .updatedAt(refreshedVehicle.getUpdatedAt())
+                .documents(documentResponses)
+                .build();
+
+        // Build all vehicles for this owner to return in vehicleDocumentResponseList
+        List<Vehicle> allOwnerVehicles = vehicleRepository.findByOwnerId(owner.getId());
+        List<VehicleDocumentResponse> allVehicleDocumentResponses = allOwnerVehicles.stream()
+                .map(v -> {
+                    if (v.getId().equals(refreshedVehicle.getId())) {
+                        return vehicleDocumentResponse; // already built above
+                    }
+                    List<DocumentResponse> otherDocs = documentRepository.findByVehicleId(v.getId())
+                            .stream()
+                            .map(doc -> DocumentResponse.builder()
+                                    .id(doc.getId())
+                                    .vehicleId(v.getId())
+                                    .vehicleRegistrationNumber(v.getRegistrationNumber())
+                                    .documentType(doc.getDocumentType() != null
+                                            ? DocumentTypeResponse.builder()
+                                                    .id(doc.getDocumentType().getId())
+                                                    .name(doc.getDocumentType().getName())
+                                                    .description(doc.getDocumentType().getDescription())
+                                                    .build()
+                                            : null)
+                                    .referenceNumber(doc.getReferenceNumber())
+                                    .imageUrl(doc.getImageUrl())
+                                    .startDate(doc.getStartDate())
+                                    .endDate(doc.getEndDate())
+                                    .createdAt(doc.getCreatedAt())
+                                    .updatedAt(doc.getUpdatedAt())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    VehicleTypeResponse vt = v.getVehicleType() != null
+                            ? VehicleTypeResponse.builder()
+                                    .id(v.getVehicleType().getId())
+                                    .name(v.getVehicleType().getName())
+                                    .description(v.getVehicleType().getDescription())
+                                    .zplCode(v.getVehicleType().getZplCode())
+                                    .createdAt(v.getVehicleType().getCreatedAt())
+                                    .updatedAt(v.getVehicleType().getUpdatedAt())
+                                    .build()
+                            : null;
+
+                    VehicleModelResponse vm = null;
+                    if (v.getVehicleModel() != null) {
+                        VehicleMakeResponse mk = v.getVehicleModel().getMake() != null
+                                ? VehicleMakeResponse.builder()
+                                        .id(v.getVehicleModel().getMake().getId())
+                                        .name(v.getVehicleModel().getMake().getName())
+                                        .description(v.getVehicleModel().getMake().getDescription())
+                                        .createdAt(v.getVehicleModel().getMake().getCreatedAt())
+                                        .updatedAt(v.getVehicleModel().getMake().getUpdatedAt())
+                                        .build()
+                                : null;
+                        vm = VehicleModelResponse.builder()
+                                .id(v.getVehicleModel().getId())
+                                .name(v.getVehicleModel().getName())
+                                .description(v.getVehicleModel().getDescription())
+                                .make(mk)
+                                .createdAt(v.getVehicleModel().getCreatedAt())
+                                .updatedAt(v.getVehicleModel().getUpdatedAt())
+                                .build();
+                    }
+
+                    return VehicleDocumentResponse.builder()
+                            .id(v.getId())
+                            .vehicleType(vt)
+                            .vehicleModel(vm)
+                            .owner(ownerResponse)
+                            .registrationNumber(v.getRegistrationNumber())
+                            .vehicleNumber(v.getVehicleNumber())
+                            .chassisNumber(v.getChassisNumber())
+                            .epc(v.getEpc())
+                            .registeredYear(v.getRegisteredYear())
+                            .createdAt(v.getCreatedAt())
+                            .updatedAt(v.getUpdatedAt())
+                            .documents(otherDocs)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return VehicleUserResponse.builder()
+                .id(owner.getId())
+                .username(owner.getUsername())
+                .email(owner.getEmail())
+                .firstName(owner.getFirstName())
+                .lastName(owner.getLastName())
+                .contactNumber(owner.getContactNumber())
+                .nic(owner.getNic())
+                .district(owner.getDistrict())
+                .province(owner.getProvince())
+                .scanCenterId(owner.getScanCenter() != null ? owner.getScanCenter().getId() : null)
+                .scanCenterName(owner.getScanCenter() != null ? owner.getScanCenter().getName() : null)
+                .role(RoleResponse.builder()
+                        .id(owner.getRole().getId())
+                        .name(owner.getRole().getName())
+                        .description(owner.getRole().getDescription())
+                        .build())
+                .createdAt(owner.getCreatedAt())
+                .updatedAt(owner.getUpdatedAt())
+                .vehicleDocumentResponseList(allVehicleDocumentResponses)
+                .build();
+    }
+
+    @Override
     public VehicleUserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));

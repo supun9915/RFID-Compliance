@@ -10,6 +10,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
+  Car,
 } from "lucide-react";
 export function DataTable({
   title,
@@ -18,6 +19,7 @@ export function DataTable({
   onAdd,
   onEdit,
   onDelete,
+  onVehicleDetails,
   showAddButton = true,
   showActions = true,
   showDeleteAction = true,
@@ -106,6 +108,15 @@ export function DataTable({
                   {showActions && (
                     <td className="sticky right-0 z-20 px-6 py-3 text-center bg-white group-hover:bg-gray-50 border-l border-gray-100 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-center gap-2 transition-opacity">
+                        {onVehicleDetails && (
+                          <button
+                            className="p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+                            title="Vehicle Details"
+                            onClick={() => onVehicleDetails(row)}
+                          >
+                            <Car className="w-4 h-4 text-indigo-600" />
+                          </button>
+                        )}
                         <button
                           className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           title="Edit"
