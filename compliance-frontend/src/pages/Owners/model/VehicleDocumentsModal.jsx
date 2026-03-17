@@ -240,8 +240,8 @@ function VehicleForm({
           documentRequests: values.documentRequests.map((d) => ({
             documentTypeId: Number(d.documentTypeId),
             referenceNumber: d.referenceNumber,
-            startDate: d.startDate,
-            endDate: d.endDate,
+            startDate: d.startDate ? `${d.startDate}T00:00:00Z` : null,
+            endDate: d.endDate ? `${d.endDate}T00:00:00Z` : null,
           })),
         };
         const res = editingVehicle

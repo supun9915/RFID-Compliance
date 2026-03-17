@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -245,6 +246,8 @@ public class UserServiceImpl implements IUserService {
                 .district(request.getDistrict())
                 .province(request.getProvince())
                 .scanCenter(request.getScanCenterId() != null ? resolveScanCenter(request.getScanCenterId()) : null)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(null)
                 .role(role)
                 .build();
 
@@ -328,6 +331,26 @@ public class UserServiceImpl implements IUserService {
        User user = userRepository.findById(id)
                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
+       EpcResponse epcResponse = generateEpc(vehicleOwnerRequest.getVehicleTypeId(), vehicleOwnerRequest.getVehicleModelId());
+
+       // Check if registration number already exists
+        if (vehicleOwnerRequest.getRegistrationNumber() != null &&
+                vehicleRepository.existsByRegistrationNumber(vehicleOwnerRequest.getRegistrationNumber())) {
+            throw new UserAlreadyExistsException("Vehicle with registration number " + vehicleOwnerRequest.getRegistrationNumber() + " already exists");
+        }
+
+        // Check if vehicle number already exists
+        if (vehicleOwnerRequest.getVehicleNumber() != null &&
+                vehicleRepository.existsByVehicleNumber(vehicleOwnerRequest.getVehicleNumber())) {
+            throw new UserAlreadyExistsException("Vehicle with vehicle number " + vehicleOwnerRequest.getVehicleNumber() + " already exists");
+        }
+
+        // Check if chassis number already exists
+        if (vehicleOwnerRequest.getChassisNumber() != null &&
+                vehicleRepository.existsByChassisNumber(vehicleOwnerRequest.getChassisNumber())) {
+            throw new UserAlreadyExistsException("Vehicle with chassis number " + vehicleOwnerRequest.getChassisNumber() + " already exists");
+        }
+
          // Create new vehicle
         Vehicle vehicle = Vehicle.builder()
                 .owner(user)
@@ -336,8 +359,12 @@ public class UserServiceImpl implements IUserService {
                 .registrationNumber(vehicleOwnerRequest.getRegistrationNumber())
                 .vehicleNumber(vehicleOwnerRequest.getVehicleNumber())
                 .chassisNumber(vehicleOwnerRequest.getChassisNumber())
-                .epc(null)
+                .epc(epcResponse.getEpc())
                 .registeredYear(vehicleOwnerRequest.getRegisteredYear())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(null)
+                .nextSerialNumber(epcResponse.getNextSerialNumber())
+
                 .build();
 
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
@@ -520,7 +547,7 @@ public class UserServiceImpl implements IUserService {
                     existing.setImageUrl(docReq.getImageUrl());
                     existing.setStartDate(docReq.getStartDate());
                     existing.setEndDate(docReq.getEndDate());
-                    existing.setUpdatedAt(java.time.OffsetDateTime.now());
+                    existing.setUpdatedAt(OffsetDateTime.now());
                     documentRepository.save(existing);
                 } else {
                     // Insert new document
@@ -531,8 +558,8 @@ public class UserServiceImpl implements IUserService {
                             .imageUrl(docReq.getImageUrl())
                             .startDate(docReq.getStartDate())
                             .endDate(docReq.getEndDate())
-                            .createdAt(java.time.OffsetDateTime.now())
-                            .updatedAt(java.time.OffsetDateTime.now())
+                            .createdAt(OffsetDateTime.now())
+                            .updatedAt(null)
                             .build();
                     documentRepository.save(newDoc);
                 }
@@ -562,8 +589,8 @@ public class UserServiceImpl implements IUserService {
                         .imageUrl(doc.getImageUrl())
                         .startDate(doc.getStartDate())
                         .endDate(doc.getEndDate())
-                        .createdAt(doc.getCreatedAt())
-                        .updatedAt(doc.getUpdatedAt())
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -821,32 +848,37 @@ public class UserServiceImpl implements IUserService {
     }
 
     private VehicleType resolveVehicleType(@NotNull(message = "Vehicle type ID is required") Long vehicleTypeId) {
-        VehicleType vehicleType = VehicleTypeRepository.findVehicleTypeById(vehicleTypeId);
-        if (vehicleType == null) {
-            throw new ResourceNotFoundException("Vehicle type not found with id: " + vehicleTypeId);
-        }
-        return vehicleType;
+        return vehicleTypeRepository.findById(vehicleTypeId).orElseThrow(
+                () -> new ResourceNotFoundException("Vehicle type not found with id: " + vehicleTypeId));
+
     }
 
     private VehicleModel resolveVehicleModel(@NotNull(message = "Vehicle model ID is required") Long vehicleModelId) {
-        if (vehicleModelId == null) return null;
-        return vehicleModelRepository.findById(vehicleModelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle model not found with id: " + vehicleModelId));
+        return vehicleModelRepository.findById(vehicleModelId).orElseThrow(
+                () -> new ResourceNotFoundException("Vehicle model not found with id: " + vehicleModelId));
     }
 
     private DocumentType resolveDocumentType(@NotNull(message = "Document type ID is required") Long documentTypeId) {
-        if (documentTypeId == null) return null;
-        DocumentType documentType = documentTypeRepository.findById(documentTypeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + documentTypeId));
-        return documentType;
+        return documentTypeRepository.findById(documentTypeId).orElseThrow(
+                () -> new ResourceNotFoundException("Document type not found with id: " + documentTypeId));
 
     }
 
+    private EpcResponse generateEpc(Long vehicleTypeId, Long ownerId) {
+        // Get the last created vehicle (desc by id) and use its id + 1 as the next serial number
+        Vehicle lastVehicle = vehicleRepository.findTopByOrderByIdDesc().orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleTypeId));
+
+
+        EpcResponse epcResponse = new EpcResponse();
+        epcResponse.setEpc(String.format("%s-%s-%06d", vehicleTypeId, ownerId, lastVehicle.getNextSerialNumber()));
+        epcResponse.setNextSerialNumber(lastVehicle.getNextSerialNumber() + 1);
+        return epcResponse;
+    }
 
     private ScanCenter resolveScanCenter(Long scanCenterId) {
         if (scanCenterId == null) return null;
-        return scanCenterRepository.findById(scanCenterId)
-                .orElseThrow(() -> new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId));
+        return scanCenterRepository.findById(scanCenterId).orElseThrow(
+                () -> new ResourceNotFoundException("Scan center not found with id: " + scanCenterId));
     }
 
     private UserResponse mapToUserResponse(User user) {

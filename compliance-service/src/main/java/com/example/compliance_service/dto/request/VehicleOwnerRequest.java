@@ -21,7 +21,6 @@ public class VehicleOwnerRequest {
 
     private Long vehicleModelId;
 
-    @NotNull(message = "Owner ID is required")
     private Long ownerId;
 
     @NotBlank(message = "Registration number is required")

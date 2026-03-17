@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { DataTable } from "../../components/Shared/DataTable";
 import { OwnerFormModal } from "./model/OwnerFormModal";
-import { VehicleDocumentsModal } from "./model/VehicleDocumentsModal";
 import {
   createUser,
   updateUser,
@@ -19,7 +18,7 @@ const EMPTY_FORM = {
   nic: "",
 };
 
-export function Owners() {
+export function Owners({ onViewVehicles }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
@@ -30,8 +29,6 @@ export function Owners() {
   const [initialValues, setInitialValues] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
-
-  const [vehicleModalOwner, setVehicleModalOwner] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -167,7 +164,7 @@ export function Owners() {
           data={tableData}
           onAdd={openCreateModal}
           onEdit={openEditModal}
-          onVehicleDetails={(row) => setVehicleModalOwner(row)}
+          onVehicleDetails={(row) => onViewVehicles(row)}
           showDeleteAction={false}
           showToggleAction={false}
         />
@@ -182,14 +179,6 @@ export function Owners() {
           formError={formError}
           closeModal={closeModal}
           onSubmit={handleSubmit}
-        />
-      )}
-
-      {/* Vehicle Details Modal */}
-      {vehicleModalOwner && (
-        <VehicleDocumentsModal
-          owner={vehicleModalOwner}
-          onClose={() => setVehicleModalOwner(null)}
         />
       )}
     </>

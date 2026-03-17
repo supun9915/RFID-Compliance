@@ -1,12 +1,7 @@
 package com.example.compliance_service.service.impl;
 
 import com.example.compliance_service.dto.request.VehicleRequest;
-import com.example.compliance_service.dto.response.RoleResponse;
-import com.example.compliance_service.dto.response.UserResponse;
-import com.example.compliance_service.dto.response.VehicleMakeResponse;
-import com.example.compliance_service.dto.response.VehicleModelResponse;
-import com.example.compliance_service.dto.response.VehicleResponse;
-import com.example.compliance_service.dto.response.VehicleTypeResponse;
+import com.example.compliance_service.dto.response.*;
 import com.example.compliance_service.entity.User;
 import com.example.compliance_service.entity.Vehicle;
 import com.example.compliance_service.entity.VehicleModel;
@@ -98,10 +93,7 @@ public class VehicleServiceImpl implements IVehicleService {
             throw new IllegalArgumentException("User role must be OWNER to be assigned as vehicle owner");
         }
 
-        String epc = generateEpc(
-                vehicleType.getId(),
-                owner.getId()
-        );
+        EpcResponse epcResponse = generateEpc(request.getVehicleTypeId(), request.getOwnerId());
 
 
         Vehicle vehicle = Vehicle.builder()
@@ -112,24 +104,25 @@ public class VehicleServiceImpl implements IVehicleService {
                 .vehicleNumber(request.getVehicleNumber())
                 .chassisNumber(request.getChassisNumber())
                 .registeredYear(request.getRegisteredYear())
-                .epc(epc)
+                .epc(epcResponse.getEpc())
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
+                .nextSerialNumber(epcResponse.getNextSerialNumber())
                 .build();
 
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         return mapToResponse(savedVehicle);
     }
 
-    private String generateEpc(Long vehicleTypeId, Long ownerId) {
-        // Get the current serial number count for this vehicle (or use vehicleId-based serial)
-        long serialNumber = vehicleRepository.countByVehicleTypeIdAndOwnerId(vehicleTypeId, ownerId) ;
+    private EpcResponse generateEpc(Long vehicleTypeId, Long ownerId) {
+        // Get the last created vehicle (desc by id) and use its id + 1 as the next serial number
+        Vehicle lastVehicle = vehicleRepository.findTopByOrderByIdDesc().orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleTypeId));
 
-        return String.format("%04d%010d%010d",
-                vehicleTypeId,
-                ownerId,
-                serialNumber
-        );
+
+        EpcResponse epcResponse = new EpcResponse();
+        epcResponse.setEpc(String.format("%s-%s-%06d", vehicleTypeId, ownerId, lastVehicle.getNextSerialNumber()));
+        epcResponse.setNextSerialNumber(lastVehicle.getNextSerialNumber() + 1);
+        return epcResponse;
     }
 
     @Override

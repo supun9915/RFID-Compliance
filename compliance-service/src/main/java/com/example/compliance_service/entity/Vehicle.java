@@ -51,6 +51,9 @@ public class Vehicle {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
+    @Column(name = "next_serial_number", length = 100)
+    private Long nextSerialNumber;
+
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<Document> documents;
 

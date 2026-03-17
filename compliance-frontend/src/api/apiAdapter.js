@@ -1,10 +1,33 @@
 import axios from "axios";
+import { notifyResponse } from "../utils/responseNotifier";
 
 const GET = "get";
 const POST = "post";
 const PUT = "put";
 const DELETE = "delete";
 const PATCH = "patch";
+
+const buildValidationDetails = (errorData) => {
+  if (!errorData || typeof errorData !== "object" || Array.isArray(errorData)) {
+    return "";
+  }
+
+  const lines = Object.entries(errorData)
+    .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
+    .map(([field, value]) => `${field}: ${value}`);
+
+  return lines.length > 0 ? `\n${lines.join("\n")}` : "";
+};
+
+const notifyApiMessage = ({ success, message }) => {
+  if (!message) return;
+
+  notifyResponse({
+    type: success ? "success" : "error",
+    title: success ? "Success" : "Error",
+    message,
+  });
+};
 
 /**
  * Clears authentication data from localStorage and redirects to login.
@@ -64,6 +87,13 @@ const request = async (
 
     // Handle 204 No Content
     if (result.status === 204) {
+      if (type !== GET) {
+        notifyApiMessage({
+          success: true,
+          message: "Request completed successfully.",
+        });
+      }
+
       return {
         content: [],
         totalElements: 0,
@@ -75,7 +105,16 @@ const request = async (
       };
     }
 
-    return result.data;
+    const responseBody = result.data;
+    if (
+      type !== GET &&
+      responseBody?.success === true &&
+      responseBody?.message
+    ) {
+      notifyApiMessage({ success: true, message: responseBody.message });
+    }
+
+    return responseBody;
   } catch (error) {
     console.error("API Request failed:", error?.message);
 
@@ -92,10 +131,27 @@ const request = async (
         return 0;
       }
 
+      const apiMessage =
+        error.response.data?.message ||
+        error.message ||
+        "Request failed. Please try again.";
+      const details = buildValidationDetails(error.response.data?.data);
+
+      notifyApiMessage({
+        success: false,
+        message: `${apiMessage}${details}`,
+      });
+
       return { error };
     }
 
     if (error.request) {
+      notifyApiMessage({
+        success: false,
+        message:
+          "Network error: Unable to connect to the server. Please check your connection.",
+      });
+
       return {
         error: {
           ...error,
@@ -104,6 +160,11 @@ const request = async (
         },
       };
     }
+
+    notifyApiMessage({
+      success: false,
+      message: error?.message || "Unexpected error occurred.",
+    });
 
     return { error };
   }
