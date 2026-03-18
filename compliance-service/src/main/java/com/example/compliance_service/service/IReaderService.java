@@ -20,4 +20,10 @@ public interface IReaderService {
     ReaderResponse updateReader(Long id, ReaderRequest request);
 
     void deleteReader(Long id);
+
+    ReaderResponse activateReader(Long id);
+
+    ReaderResponse deactivateReader(Long id);
+
+    void softDeleteReader(Long id);
 }

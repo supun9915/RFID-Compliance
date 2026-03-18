@@ -20,5 +20,10 @@ public interface IScanCenterService {
     ScanCenterResponse updateScanCenter(Long id, ScanCenterRequest request);
 
     void deleteScanCenter(Long id);
-}
 
+    ScanCenterResponse activateScanCenter(Long id);
+
+    ScanCenterResponse deactivateScanCenter(Long id);
+
+    void softDeleteScanCenter(Long id);
+}

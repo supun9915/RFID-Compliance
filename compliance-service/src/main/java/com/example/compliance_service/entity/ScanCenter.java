@@ -38,6 +38,10 @@ public class ScanCenter {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 

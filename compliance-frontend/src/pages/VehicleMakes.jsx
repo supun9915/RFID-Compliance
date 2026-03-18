@@ -5,14 +5,18 @@ import {
   createVehicleMake,
   updateVehicleMake,
   deleteVehicleMake,
+  updateVehicleMakeStatus,
 } from "../api/vehicleMakesApi";
 import { X } from "lucide-react";
+import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
+import { notifyResponse } from "../utils/responseNotifier";
 
 export function VehicleMakes() {
   const [vehicleMakes, setVehicleMakes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -29,7 +33,12 @@ export function VehicleMakes() {
       setLoading(true);
       const response = await getVehicleMakes();
       if (response.success) {
-        setVehicleMakes(response.data);
+        const normalized = (response.data || []).map((item) => ({
+          ...item,
+          status: item.active ? "Active" : "Inactive",
+          active: item.active,
+        }));
+        setVehicleMakes(normalized);
       } else {
         setError("Failed to fetch vehicle makes");
       }
@@ -58,19 +67,60 @@ export function VehicleMakes() {
   };
 
   const handleDelete = async (row) => {
-    if (window.confirm(`Are you sure you want to delete "${row.name}"?`)) {
-      try {
-        const response = await deleteVehicleMake(row.id);
-        if (response.success) {
-          fetchVehicleMakes();
-          alert("Vehicle make deleted successfully");
-        } else {
-          alert("Failed to delete vehicle make");
-        }
-      } catch (err) {
-        alert("Error deleting vehicle make");
-        console.error(err);
+    setDeleteTarget(row);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    const target = deleteTarget;
+    setDeleteTarget(null);
+
+    try {
+      const response = await deleteVehicleMake(target.id);
+      if (response.success) {
+        fetchVehicleMakes();
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to delete vehicle make",
+        });
       }
+    } catch (err) {
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error deleting vehicle make",
+      });
+      console.error(err);
+    }
+  };
+
+  const handleToggleStatus = async (row) => {
+    const nextActive = !row.active;
+    const actionLabel = nextActive ? "activate" : "deactivate";
+
+    try {
+      const response = await updateVehicleMakeStatus(row.id, nextActive);
+      if (response.success) {
+        await fetchVehicleMakes();
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: `Failed to ${actionLabel} vehicle make`,
+        });
+      }
+    } catch (err) {
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || `Error trying to ${actionLabel} vehicle make`,
+      });
+      console.error(err);
     }
   };
 
@@ -78,7 +128,11 @@ export function VehicleMakes() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Please enter a vehicle make name");
+      notifyResponse({
+        type: "error",
+        title: "Validation Error",
+        message: "Please enter a vehicle make name",
+      });
       return;
     }
 
@@ -99,16 +153,19 @@ export function VehicleMakes() {
         fetchVehicleMakes();
         setShowModal(false);
         setFormData({ id: null, name: "", description: "" });
-        alert(
-          editMode
-            ? "Vehicle make updated successfully"
-            : "Vehicle make created successfully",
-        );
-      } else {
-        alert("Failed to save vehicle make");
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to save vehicle make",
+        });
       }
     } catch (err) {
-      alert("Error saving vehicle make");
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error saving vehicle make",
+      });
       console.error(err);
     }
   };
@@ -117,6 +174,21 @@ export function VehicleMakes() {
     { key: "id", label: "ID" },
     { key: "name", label: "Make Name" },
     { key: "description", label: "Description" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              : "bg-red-50 text-red-700 border border-red-100"
+          }`}
+        >
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
   ];
 
   if (loading) {
@@ -144,6 +216,7 @@ export function VehicleMakes() {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
       />
 
       {showModal && (
@@ -221,6 +294,18 @@ export function VehicleMakes() {
           </div>
         </div>
       )}
+
+      <ApiResponsePopup
+        open={Boolean(deleteTarget)}
+        type="warning"
+        title="Delete Vehicle Make"
+        message={`Are you sure you want to delete "${deleteTarget?.name || ""}"?`}
+        buttonLabel="Delete"
+        cancelLabel="Cancel"
+        showCancel
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

@@ -106,6 +106,8 @@ public class DocumentServiceImpl implements IDocumentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .imageUrl(request.getImageUrl())
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -147,6 +149,37 @@ public class DocumentServiceImpl implements IDocumentService {
         documentRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public DocumentResponse activateDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(true);
+        document.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentRepository.save(document));
+    }
+
+    @Override
+    @Transactional
+    public DocumentResponse deactivateDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(false);
+        document.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentRepository.save(document));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(false);
+        document.setDeleted(true);
+        document.setUpdatedAt(OffsetDateTime.now());
+        documentRepository.save(document);
+    }
+
     private DocumentResponse mapToResponse(Document document) {
         DocumentTypeResponse documentTypeResponse = null;
         if (document.getDocumentType() != null) {
@@ -154,6 +187,8 @@ public class DocumentServiceImpl implements IDocumentService {
                     .id(document.getDocumentType().getId())
                     .name(document.getDocumentType().getName())
                     .description(document.getDocumentType().getDescription())
+                    .active(document.getDocumentType().getActive())
+                    .deleted(document.getDocumentType().getDeleted())
                     .build();
         }
 
@@ -166,6 +201,8 @@ public class DocumentServiceImpl implements IDocumentService {
                 .startDate(document.getStartDate())
                 .endDate(document.getEndDate())
                 .imageUrl(document.getImageUrl())
+                .active(document.getActive())
+                .deleted(document.getDeleted())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
                 .build();

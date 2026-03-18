@@ -17,6 +17,8 @@ public class VehicleTypeResponse {
     private String name;
     private String description;
     private String zplCode;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

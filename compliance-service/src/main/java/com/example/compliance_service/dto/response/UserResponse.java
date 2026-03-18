@@ -25,6 +25,8 @@ public class UserResponse {
     private Long scanCenterId;
     private String scanCenterName;
     private RoleResponse role;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

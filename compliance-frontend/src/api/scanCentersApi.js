@@ -1,4 +1,4 @@
-import { DELETE, GET, POST, PUT, request } from "./apiAdapter";
+import { GET, PATCH, POST, PUT, request } from "./apiAdapter";
 
 /**
  * Fetch all scan centers.
@@ -80,7 +80,7 @@ export const updateScanCenter = async (id, payload) => {
  * @returns {Promise<{ success: boolean, message?: string }>}
  */
 export const deleteScanCenter = async (id) => {
-  const response = await request(`/scan-centers/${id}`, DELETE);
+  const response = await request(`/scan-centers/${id}`, PATCH);
 
   if (!response || response.error) {
     const message =
@@ -93,6 +93,36 @@ export const deleteScanCenter = async (id) => {
 
   return {
     success: response.success !== false,
+    message: response.message,
+  };
+};
+
+/**
+ * Manage scan center active/inactive status.
+ * @param {number} id
+ * @param {boolean} active
+ * @returns {Promise<{ success: boolean, data?: object, message?: string }>}
+ */
+export const updateScanCenterStatus = async (id, active) => {
+  const response = await request(
+    `/scan-centers/${id}/status`,
+    PATCH,
+    undefined,
+    { active },
+  );
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to update scan center status";
+
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
     message: response.message,
   };
 };

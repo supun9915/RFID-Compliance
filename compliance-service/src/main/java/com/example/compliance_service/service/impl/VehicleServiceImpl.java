@@ -70,7 +70,7 @@ public class VehicleServiceImpl implements IVehicleService {
     @Transactional
     public VehicleResponse createVehicle(VehicleRequest request) {
         // Check if registration number already exists
-        if (vehicleRepository.existsByRegistrationNumber(request.getRegistrationNumber())) {
+        if (vehicleRepository.existsByRegistrationNumberAndActiveTrue(request.getRegistrationNumber())) {
             throw new IllegalArgumentException("Vehicle with registration number " + request.getRegistrationNumber() + " already exists");
         }
 
@@ -84,7 +84,7 @@ public class VehicleServiceImpl implements IVehicleService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getOwnerId()));
 
         //Check registration number uniqueness for the same owner and vehicle type
-        if (vehicleRepository.existsByRegistrationNumber(request.getRegistrationNumber())) {
+        if (vehicleRepository.existsByRegistrationNumberAndActiveTrue(request.getRegistrationNumber())) {
             throw new IllegalArgumentException("Vehicle with registration number " + request.getRegistrationNumber() +
                     " already exists for the same owner and vehicle type");
         }
@@ -105,6 +105,8 @@ public class VehicleServiceImpl implements IVehicleService {
                 .chassisNumber(request.getChassisNumber())
                 .registeredYear(request.getRegisteredYear())
                 .epc(epcResponse.getEpc())
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .nextSerialNumber(epcResponse.getNextSerialNumber())
@@ -133,7 +135,7 @@ public class VehicleServiceImpl implements IVehicleService {
 
         // Check registration number uniqueness if changing
         if (!vehicle.getRegistrationNumber().equals(request.getRegistrationNumber()) 
-                && vehicleRepository.existsByRegistrationNumber(request.getRegistrationNumber())) {
+                && vehicleRepository.existsByRegistrationNumberAndActiveTrue(request.getRegistrationNumber())) {
             throw new IllegalArgumentException("Vehicle with registration number " + request.getRegistrationNumber() + " already exists");
         }
 
@@ -171,6 +173,37 @@ public class VehicleServiceImpl implements IVehicleService {
         vehicleRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VehicleResponse activateVehicle(Long id) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + id));
+        vehicle.setActive(true);
+        vehicle.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleRepository.save(vehicle));
+    }
+
+    @Override
+    @Transactional
+    public VehicleResponse deactivateVehicle(Long id) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + id));
+        vehicle.setActive(false);
+        vehicle.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleRepository.save(vehicle));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteVehicle(Long id) {
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + id));
+        vehicle.setActive(false);
+        vehicle.setDeleted(true);
+        vehicle.setUpdatedAt(OffsetDateTime.now());
+        vehicleRepository.save(vehicle);
+    }
+
     private VehicleResponse mapToResponse(Vehicle vehicle) {
         VehicleTypeResponse vehicleTypeResponse = null;
         if (vehicle.getVehicleType() != null) {
@@ -179,6 +212,8 @@ public class VehicleServiceImpl implements IVehicleService {
                     .name(vehicle.getVehicleType().getName())
                     .description(vehicle.getVehicleType().getDescription())
                     .zplCode(vehicle.getVehicleType().getZplCode())
+                    .active(vehicle.getVehicleType().getActive())
+                    .deleted(vehicle.getVehicleType().getDeleted())
                     .createdAt(vehicle.getVehicleType().getCreatedAt())
                     .updatedAt(vehicle.getVehicleType().getUpdatedAt())
                     .build();
@@ -203,6 +238,8 @@ public class VehicleServiceImpl implements IVehicleService {
                     .contactNumber(vehicle.getOwner().getContactNumber())
                     .nic(vehicle.getOwner().getNic())
                     .role(roleResponse)
+                    .active(vehicle.getOwner().getActive())
+                    .deleted(vehicle.getOwner().getDeleted())
                     .createdAt(vehicle.getOwner().getCreatedAt())
                     .updatedAt(vehicle.getOwner().getUpdatedAt())
                     .build();
@@ -218,6 +255,8 @@ public class VehicleServiceImpl implements IVehicleService {
                 .chassisNumber(vehicle.getChassisNumber())
                 .epc(vehicle.getEpc())
                 .registeredYear(vehicle.getRegisteredYear())
+                .active(vehicle.getActive())
+                .deleted(vehicle.getDeleted())
                 .createdAt(vehicle.getCreatedAt())
                 .updatedAt(vehicle.getUpdatedAt())
                 .build();
@@ -231,6 +270,8 @@ public class VehicleServiceImpl implements IVehicleService {
                     .id(vehicleModel.getMake().getId())
                     .name(vehicleModel.getMake().getName())
                     .description(vehicleModel.getMake().getDescription())
+                    .active(vehicleModel.getMake().getActive())
+                    .deleted(vehicleModel.getMake().getDeleted())
                     .createdAt(vehicleModel.getMake().getCreatedAt())
                     .updatedAt(vehicleModel.getMake().getUpdatedAt())
                     .build();
@@ -240,6 +281,8 @@ public class VehicleServiceImpl implements IVehicleService {
                 .name(vehicleModel.getName())
                 .make(makeResponse)
                 .description(vehicleModel.getDescription())
+                .active(vehicleModel.getActive())
+                .deleted(vehicleModel.getDeleted())
                 .createdAt(vehicleModel.getCreatedAt())
                 .updatedAt(vehicleModel.getUpdatedAt())
                 .build();

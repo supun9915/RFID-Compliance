@@ -41,6 +41,8 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .zplCode(request.getZplCode())
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -73,12 +75,45 @@ public class VehicleTypeServiceImpl implements IVehicleTypeService {
         vehicleTypeRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VehicleTypeResponse activateVehicleType(Long id) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle type not found with id: " + id));
+        vehicleType.setActive(true);
+        vehicleType.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleTypeRepository.save(vehicleType));
+    }
+
+    @Override
+    @Transactional
+    public VehicleTypeResponse deactivateVehicleType(Long id) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle type not found with id: " + id));
+        vehicleType.setActive(false);
+        vehicleType.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleTypeRepository.save(vehicleType));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteVehicleType(Long id) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle type not found with id: " + id));
+        vehicleType.setActive(false);
+        vehicleType.setDeleted(true);
+        vehicleType.setUpdatedAt(OffsetDateTime.now());
+        vehicleTypeRepository.save(vehicleType);
+    }
+
     private VehicleTypeResponse mapToResponse(VehicleType vehicleType) {
         return VehicleTypeResponse.builder()
                 .id(vehicleType.getId())
                 .name(vehicleType.getName())
                 .description(vehicleType.getDescription())
                 .zplCode(vehicleType.getZplCode())
+                .active(vehicleType.getActive())
+                .deleted(vehicleType.getDeleted())
                 .createdAt(vehicleType.getCreatedAt())
                 .updatedAt(vehicleType.getUpdatedAt())
                 .build();

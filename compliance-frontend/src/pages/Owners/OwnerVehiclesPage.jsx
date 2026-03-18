@@ -23,6 +23,7 @@ import {
   getUserById,
   addVehicleToOwner,
   updateVehicleForOwner,
+  removeVehicleFromOwner,
 } from "../../api/usersApi";
 import { getVehicleTypes } from "../../api/vehicleTypesApi";
 import { getVehicleMakes } from "../../api/vehicleMakesApi";
@@ -206,7 +207,7 @@ function OwnerProfileCard({ owner, vehicles = [] }) {
 }
 
 /* ─── Vehicle Card ──────────────────────────────────────────── */
-function VehicleCard({ vehicle, selected, onSelect, onEdit }) {
+function VehicleCard({ vehicle, selected, onSelect, onEdit, onDelete }) {
   return (
     <div
       onClick={() => onSelect(vehicle)}
@@ -248,6 +249,17 @@ function VehicleCard({ vehicle, selected, onSelect, onEdit }) {
               title="Edit Vehicle"
             >
               <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(vehicle);
+              }}
+              className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+              title="Remove Vehicle"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-red-500" />
             </button>
           </div>
         </div>
@@ -859,6 +871,9 @@ export function OwnerVehiclesPage({ owner, onBack }) {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [formMode, setFormMode] = useState(null); // null | "add" | "edit"
   const [editingVehicle, setEditingVehicle] = useState(null);
+  const [deletingVehicle, setDeletingVehicle] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [makes, setMakes] = useState([]);
@@ -895,6 +910,30 @@ export function OwnerVehiclesPage({ owner, onBack }) {
     setEditingVehicle(vehicle);
     setFormMode("edit");
     setSelectedVehicle(null);
+  };
+
+  const handleDeleteVehicle = (vehicle) => {
+    setDeletingVehicle(vehicle);
+    setDeleteError(null);
+  };
+
+  const confirmDeleteVehicle = async () => {
+    if (!deletingVehicle) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    const res = await removeVehicleFromOwner(owner.id, deletingVehicle.id);
+    setDeleteLoading(false);
+    if (res.success) {
+      setDeletingVehicle(null);
+      if (selectedVehicle?.id === deletingVehicle.id) setSelectedVehicle(null);
+      if (editingVehicle?.id === deletingVehicle.id) {
+        setFormMode(null);
+        setEditingVehicle(null);
+      }
+      loadOwner();
+    } else {
+      setDeleteError(res.message || "Failed to remove vehicle.");
+    }
   };
 
   const handleFormSuccess = () => {
@@ -1020,6 +1059,7 @@ export function OwnerVehiclesPage({ owner, onBack }) {
                       setEditingVehicle(null);
                     }}
                     onEdit={handleEditVehicle}
+                    onDelete={handleDeleteVehicle}
                   />
                 ))}
               </div>
@@ -1035,6 +1075,61 @@ export function OwnerVehiclesPage({ owner, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      {deletingVehicle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">
+                  Remove Vehicle
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-gray-900">
+                {deletingVehicle.vehicleNumber}
+              </span>{" "}
+              from this owner?
+            </p>
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                {deleteError}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeletingVehicle(null);
+                  setDeleteError(null);
+                }}
+                disabled={deleteLoading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteVehicle}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
+              >
+                {deleteLoading ? "Removing..." : "Remove Vehicle"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

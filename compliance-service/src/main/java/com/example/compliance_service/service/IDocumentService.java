@@ -26,4 +26,10 @@ public interface IDocumentService {
     DocumentResponse updateDocument(Long id, DocumentRequest request);
 
     void deleteDocument(Long id);
+
+    DocumentResponse activateDocument(Long id);
+
+    DocumentResponse deactivateDocument(Long id);
+
+    void softDeleteDocument(Long id);
 }

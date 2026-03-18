@@ -88,13 +88,43 @@ public class ScanCenterController {
 
     /**
      * Delete scan center (Admin only)
-     * DELETE /api/scan-centers/{id}
+     * PATCH /api/scan-centers/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteScanCenter(@PathVariable Long id) {
         scanCenterService.deleteScanCenter(id);
         return ResponseEntity.ok(ApiResponse.success("Scan center deleted successfully", null));
+    }
+
+    /**
+     * Soft delete scan center (Admin only)
+     * PATCH /api/scan-centers/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteScanCenter(@PathVariable Long id) {
+        scanCenterService.softDeleteScanCenter(id);
+        return ResponseEntity.ok(ApiResponse.success("Scan center soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage scan center active/inactive status (Admin only)
+     * PATCH /api/scan-centers/{id}/status?active=true  → activate
+     * PATCH /api/scan-centers/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageScanCenterStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            ScanCenterResponse scanCenter = scanCenterService.activateScanCenter(id);
+            return ResponseEntity.ok(ApiResponse.success("Scan center activated successfully", scanCenter));
+        } else {
+            ScanCenterResponse scanCenter = scanCenterService.deactivateScanCenter(id);
+            return ResponseEntity.ok(ApiResponse.success("Scan center deactivated successfully", scanCenter));
+        }
     }
 }
 

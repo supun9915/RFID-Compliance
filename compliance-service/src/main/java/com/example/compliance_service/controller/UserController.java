@@ -1,5 +1,6 @@
 package com.example.compliance_service.controller;
 
+import com.example.compliance_service.dto.response.VehicleDocumentResponse;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
@@ -109,6 +110,20 @@ public class UserController {
     }
 
     /**
+     * Remove a vehicle from an owner user (SuperAdmin, System Admin or Admin only)
+     * Clears the vehicle's owner and sets it as inactive.
+     * PATCH /api/users/{userId}/vehicles/{vehicleId}/remove
+     */
+    @PatchMapping("/{userId}/vehicles/{vehicleId}/remove")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    public ResponseEntity<?> removeVehicleFromOwner(
+            @PathVariable Long userId,
+            @PathVariable Long vehicleId) {
+        VehicleDocumentResponse response = userService.removeVehicleFromOwner(userId, vehicleId);
+        return ResponseEntity.ok(ApiResponse.success("Vehicle removed from owner successfully", response));
+    }
+
+    /**
      * Get user details by ID
      * POST /api/users/{id}
      */
@@ -133,12 +148,42 @@ public class UserController {
 
     /**
      * Delete user (SuperAdmin or System Admin only)
-     * DELETE /api/users/{id}
+     * PATCH /api/users/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+    }
+
+    /**
+     * Soft delete user (SuperAdmin or System Admin only)
+     * PATCH /api/users/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<?> softDeleteUser(@PathVariable Long id) {
+        userService.softDeleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success("User soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage user active/inactive status (SuperAdmin or System Admin only)
+     * PATCH /api/users/{id}/status?active=true  → activate
+     * PATCH /api/users/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    public ResponseEntity<?> manageUserStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            UserResponse user = userService.activateUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User activated successfully", user));
+        } else {
+            UserResponse user = userService.deactivateUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User deactivated successfully", user));
+        }
     }
 }

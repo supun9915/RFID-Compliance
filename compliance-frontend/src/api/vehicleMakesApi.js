@@ -1,4 +1,4 @@
-import { GET, POST, PUT, DELETE, request } from "./apiAdapter";
+import { GET, PATCH, POST, PUT, request } from "./apiAdapter";
 
 /**
  * Fetch all vehicle makes.
@@ -35,5 +35,13 @@ export const updateVehicleMake = (id, data) =>
  * @param {number} id
  * @returns {Promise<{ success: boolean, message: string }>}
  */
-export const deleteVehicleMake = (id) =>
-  request(`/vehicle-makes/${id}`, DELETE);
+export const deleteVehicleMake = (id) => request(`/vehicle-makes/${id}`, PATCH);
+
+/**
+ * Manage vehicle make active/inactive status.
+ * @param {number} id
+ * @param {boolean} active
+ * @returns {Promise<{ success: boolean, data: object, message: string }>}
+ */
+export const updateVehicleMakeStatus = (id, active) =>
+  request(`/vehicle-makes/${id}/status`, PATCH, undefined, { active });

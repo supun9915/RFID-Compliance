@@ -43,4 +43,24 @@ public interface IRoleService {
      * @param id Role ID
      */
     void deleteRole(Long id);
+
+    /**
+     * Activate a role
+     * @param id Role ID
+     * @return Activated role details
+     */
+    RoleResponse activateRole(Long id);
+
+    /**
+     * Deactivate a role
+     * @param id Role ID
+     * @return Deactivated role details
+     */
+    RoleResponse deactivateRole(Long id);
+
+    /**
+     * Soft delete a role
+     * @param id Role ID
+     */
+    void softDeleteRole(Long id);
 }

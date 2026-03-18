@@ -68,12 +68,42 @@ public class VehicleMakeController {
 
     /**
      * Delete vehicle make (Admin only)
-     * DELETE /api/vehicle-makes/{id}
+     * PATCH /api/vehicle-makes/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicleMake(@PathVariable Long id) {
         vehicleMakeService.deleteVehicleMake(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle make deleted successfully", null));
+    }
+
+    /**
+     * Soft delete vehicle make (Admin only)
+     * PATCH /api/vehicle-makes/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteVehicleMake(@PathVariable Long id) {
+        vehicleMakeService.softDeleteVehicleMake(id);
+        return ResponseEntity.ok(ApiResponse.success("Vehicle make soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage vehicle make active/inactive status (Admin only)
+     * PATCH /api/vehicle-makes/{id}/status?active=true  → activate
+     * PATCH /api/vehicle-makes/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageVehicleMakeStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            VehicleMakeResponse vehicleMake = vehicleMakeService.activateVehicleMake(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle make activated successfully", vehicleMake));
+        } else {
+            VehicleMakeResponse vehicleMake = vehicleMakeService.deactivateVehicleMake(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle make deactivated successfully", vehicleMake));
+        }
     }
 }

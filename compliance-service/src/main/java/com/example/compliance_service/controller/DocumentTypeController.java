@@ -68,12 +68,42 @@ public class DocumentTypeController {
 
     /**
      * Delete document type (Admin only)
-     * DELETE /api/document-types/{id}
+     * PATCH /api/document-types/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteDocumentType(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
         return ResponseEntity.ok(ApiResponse.success("Document type deleted successfully", null));
+    }
+
+    /**
+     * Soft delete document type (Admin only)
+     * PATCH /api/document-types/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteDocumentType(@PathVariable Long id) {
+        documentTypeService.softDeleteDocumentType(id);
+        return ResponseEntity.ok(ApiResponse.success("Document type soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage document type active/inactive status (Admin only)
+     * PATCH /api/document-types/{id}/status?active=true  → activate
+     * PATCH /api/document-types/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageDocumentTypeStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            DocumentTypeResponse documentType = documentTypeService.activateDocumentType(id);
+            return ResponseEntity.ok(ApiResponse.success("Document type activated successfully", documentType));
+        } else {
+            DocumentTypeResponse documentType = documentTypeService.deactivateDocumentType(id);
+            return ResponseEntity.ok(ApiResponse.success("Document type deactivated successfully", documentType));
+        }
     }
 }

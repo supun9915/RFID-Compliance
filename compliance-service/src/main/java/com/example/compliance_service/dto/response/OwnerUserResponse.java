@@ -21,6 +21,8 @@ public class OwnerUserResponse {
     private Long scanCenterId;
     private String scanCenterName;
     private RoleResponse role;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private List<OwnerVehicleResponse> vehicles;

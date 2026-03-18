@@ -88,12 +88,42 @@ public class ReaderController {
 
     /**
      * Delete reader (Admin only)
-     * DELETE /api/readers/{id}
+     * PATCH /api/readers/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteReader(@PathVariable Long id) {
         readerService.deleteReader(id);
         return ResponseEntity.ok(ApiResponse.success("Reader deleted successfully", null));
+    }
+
+    /**
+     * Soft delete reader (Admin only)
+     * PATCH /api/readers/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteReader(@PathVariable Long id) {
+        readerService.softDeleteReader(id);
+        return ResponseEntity.ok(ApiResponse.success("Reader soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage reader active/inactive status (Admin only)
+     * PATCH /api/readers/{id}/status?active=true  → activate
+     * PATCH /api/readers/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageReaderStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            ReaderResponse reader = readerService.activateReader(id);
+            return ResponseEntity.ok(ApiResponse.success("Reader activated successfully", reader));
+        } else {
+            ReaderResponse reader = readerService.deactivateReader(id);
+            return ResponseEntity.ok(ApiResponse.success("Reader deactivated successfully", reader));
+        }
     }
 }

@@ -19,6 +19,7 @@ export function DataTable({
   onAdd,
   onEdit,
   onDelete,
+  onToggleStatus,
   onVehicleDetails,
   showAddButton = true,
   showActions = true,
@@ -136,7 +137,12 @@ export function DataTable({
                         {showToggleAction && (
                           <button
                             className="p-1.5 text-gray-400 hover:text-gray-900 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
-                            title="Toggle Status"
+                            title={
+                              row.active !== false ? "Deactivate" : "Activate"
+                            }
+                            onClick={() =>
+                              onToggleStatus && onToggleStatus(row)
+                            }
                           >
                             {row.active !== false ? (
                               <ToggleRight className="w-5 h-5 text-emerald-500" />

@@ -5,9 +5,12 @@ import {
   createVehicleModel,
   updateVehicleModel,
   deleteVehicleModel,
+  updateVehicleModelStatus,
 } from "../api/vehicleModelsApi";
 import { getVehicleMakes } from "../api/vehicleMakesApi";
 import { X } from "lucide-react";
+import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
+import { notifyResponse } from "../utils/responseNotifier";
 
 export function VehicleModels() {
   const [vehicleModels, setVehicleModels] = useState([]);
@@ -15,6 +18,7 @@ export function VehicleModels() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -35,7 +39,12 @@ export function VehicleModels() {
         getVehicleMakes(),
       ]);
       if (modelsRes.success) {
-        setVehicleModels(modelsRes.data);
+        const normalized = (modelsRes.data || []).map((item) => ({
+          ...item,
+          status: item.active ? "Active" : "Inactive",
+          active: item.active,
+        }));
+        setVehicleModels(normalized);
       } else {
         setError("Failed to fetch vehicle models");
       }
@@ -68,19 +77,60 @@ export function VehicleModels() {
   };
 
   const handleDelete = async (row) => {
-    if (window.confirm(`Are you sure you want to delete "${row.name}"?`)) {
-      try {
-        const response = await deleteVehicleModel(row.id);
-        if (response.success) {
-          fetchData();
-          alert("Vehicle model deleted successfully");
-        } else {
-          alert("Failed to delete vehicle model");
-        }
-      } catch (err) {
-        alert("Error deleting vehicle model");
-        console.error(err);
+    setDeleteTarget(row);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    const target = deleteTarget;
+    setDeleteTarget(null);
+
+    try {
+      const response = await deleteVehicleModel(target.id);
+      if (response.success) {
+        fetchData();
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to delete vehicle model",
+        });
       }
+    } catch (err) {
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error deleting vehicle model",
+      });
+      console.error(err);
+    }
+  };
+
+  const handleToggleStatus = async (row) => {
+    const nextActive = !row.active;
+    const actionLabel = nextActive ? "activate" : "deactivate";
+
+    try {
+      const response = await updateVehicleModelStatus(row.id, nextActive);
+      if (response.success) {
+        await fetchData();
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: `Failed to ${actionLabel} vehicle model`,
+        });
+      }
+    } catch (err) {
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || `Error trying to ${actionLabel} vehicle model`,
+      });
+      console.error(err);
     }
   };
 
@@ -88,11 +138,19 @@ export function VehicleModels() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Please enter a vehicle model name");
+      notifyResponse({
+        type: "error",
+        title: "Validation Error",
+        message: "Please enter a vehicle model name",
+      });
       return;
     }
     if (!formData.makeId) {
-      alert("Please select a vehicle make");
+      notifyResponse({
+        type: "error",
+        title: "Validation Error",
+        message: "Please select a vehicle make",
+      });
       return;
     }
 
@@ -114,16 +172,19 @@ export function VehicleModels() {
         fetchData();
         setShowModal(false);
         setFormData({ id: null, name: "", makeId: "", description: "" });
-        alert(
-          editMode
-            ? "Vehicle model updated successfully"
-            : "Vehicle model created successfully",
-        );
-      } else {
-        alert("Failed to save vehicle model");
+      } else if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to save vehicle model",
+        });
       }
     } catch (err) {
-      alert("Error saving vehicle model");
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error saving vehicle model",
+      });
       console.error(err);
     }
   };
@@ -137,6 +198,21 @@ export function VehicleModels() {
       render: (value) => value?.name ?? "—",
     },
     { key: "description", label: "Description" },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              : "bg-red-50 text-red-700 border border-red-100"
+          }`}
+        >
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
   ];
 
   if (loading) {
@@ -164,6 +240,7 @@ export function VehicleModels() {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
       />
 
       {showModal && (
@@ -265,6 +342,18 @@ export function VehicleModels() {
           </div>
         </div>
       )}
+
+      <ApiResponsePopup
+        open={Boolean(deleteTarget)}
+        type="warning"
+        title="Delete Vehicle Model"
+        message={`Are you sure you want to delete "${deleteTarget?.name || ""}"?`}
+        buttonLabel="Delete"
+        cancelLabel="Cancel"
+        showCancel
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

@@ -54,6 +54,14 @@ public class Vehicle {
     @Column(name = "next_serial_number", length = 100)
     private Long nextSerialNumber;
 
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<Document> documents;
 

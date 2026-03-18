@@ -58,6 +58,7 @@ public class ScanCenterServiceImpl implements IScanCenterService {
                 .district(request.getDistrict())
                 .province(request.getProvince())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -95,6 +96,37 @@ public class ScanCenterServiceImpl implements IScanCenterService {
         scanCenterRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public ScanCenterResponse activateScanCenter(Long id) {
+        ScanCenter scanCenter = scanCenterRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scan center not found with id: " + id));
+        scanCenter.setIsActive(true);
+        scanCenter.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(scanCenterRepository.save(scanCenter));
+    }
+
+    @Override
+    @Transactional
+    public ScanCenterResponse deactivateScanCenter(Long id) {
+        ScanCenter scanCenter = scanCenterRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scan center not found with id: " + id));
+        scanCenter.setIsActive(false);
+        scanCenter.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(scanCenterRepository.save(scanCenter));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteScanCenter(Long id) {
+        ScanCenter scanCenter = scanCenterRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scan center not found with id: " + id));
+        scanCenter.setIsActive(false);
+        scanCenter.setDeleted(true);
+        scanCenter.setUpdatedAt(OffsetDateTime.now());
+        scanCenterRepository.save(scanCenter);
+    }
+
     private ScanCenterResponse mapToResponse(ScanCenter scanCenter) {
         return ScanCenterResponse.builder()
                 .id(scanCenter.getId())
@@ -104,6 +136,7 @@ public class ScanCenterServiceImpl implements IScanCenterService {
                 .district(scanCenter.getDistrict())
                 .province(scanCenter.getProvince())
                 .isActive(scanCenter.getIsActive())
+                .deleted(scanCenter.getDeleted())
                 .createdAt(scanCenter.getCreatedAt())
                 .updatedAt(scanCenter.getUpdatedAt())
                 .build();

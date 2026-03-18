@@ -21,7 +21,7 @@ public class ScanCenterResponse {
     private String district;
     private String province;
     private Boolean isActive;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }
-

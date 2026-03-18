@@ -5,6 +5,7 @@ import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
 import com.example.compliance_service.dto.response.OwnerUserResponse;
 import com.example.compliance_service.dto.response.UserResponse;
+import com.example.compliance_service.dto.response.VehicleDocumentResponse;
 import com.example.compliance_service.dto.response.VehicleUserResponse;
 import jakarta.validation.Valid;
 
@@ -59,8 +60,18 @@ public interface IUserService {
     void deleteUser(Long id);
 
     VehicleUserResponse createOwnerUser(Long id, @Valid VehicleOwnerRequest vehicleOwnerRequest);
-
     VehicleUserResponse updateOwnerUser(Long vehicleId, @Valid VehicleOwnerRequest vehicleOwnerRequest);
-
     VehicleUserResponse getUserById(Long id);
+
+    /**
+     * Remove a vehicle from an owner user: clears the owner and sets the vehicle inactive
+     * @param userId  ID of the owner user
+     * @param vehicleId ID of the vehicle to remove
+     * @return Updated VehicleDocumentResponse for the detached vehicle
+     */
+    VehicleDocumentResponse removeVehicleFromOwner(Long userId, Long vehicleId);
+
+    UserResponse activateUser(Long id);
+    UserResponse deactivateUser(Long id);
+    void softDeleteUser(Long id);
 }

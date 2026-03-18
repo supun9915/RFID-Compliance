@@ -63,6 +63,8 @@ public class VehicleModelServiceImpl implements IVehicleModelService {
                 .name(request.getName())
                 .make(make)
                 .description(request.getDescription())
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -104,6 +106,37 @@ public class VehicleModelServiceImpl implements IVehicleModelService {
         vehicleModelRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VehicleModelResponse activateVehicleModel(Long id) {
+        VehicleModel vehicleModel = vehicleModelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle model not found with id: " + id));
+        vehicleModel.setActive(true);
+        vehicleModel.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleModelRepository.save(vehicleModel));
+    }
+
+    @Override
+    @Transactional
+    public VehicleModelResponse deactivateVehicleModel(Long id) {
+        VehicleModel vehicleModel = vehicleModelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle model not found with id: " + id));
+        vehicleModel.setActive(false);
+        vehicleModel.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleModelRepository.save(vehicleModel));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteVehicleModel(Long id) {
+        VehicleModel vehicleModel = vehicleModelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle model not found with id: " + id));
+        vehicleModel.setActive(false);
+        vehicleModel.setDeleted(true);
+        vehicleModel.setUpdatedAt(OffsetDateTime.now());
+        vehicleModelRepository.save(vehicleModel);
+    }
+
     private VehicleModelResponse mapToResponse(VehicleModel vehicleModel) {
         VehicleMakeResponse makeResponse = null;
         if (vehicleModel.getMake() != null) {
@@ -111,6 +144,8 @@ public class VehicleModelServiceImpl implements IVehicleModelService {
                     .id(vehicleModel.getMake().getId())
                     .name(vehicleModel.getMake().getName())
                     .description(vehicleModel.getMake().getDescription())
+                    .active(vehicleModel.getMake().getActive())
+                    .deleted(vehicleModel.getMake().getDeleted())
                     .createdAt(vehicleModel.getMake().getCreatedAt())
                     .updatedAt(vehicleModel.getMake().getUpdatedAt())
                     .build();
@@ -121,6 +156,8 @@ public class VehicleModelServiceImpl implements IVehicleModelService {
                 .name(vehicleModel.getName())
                 .make(makeResponse)
                 .description(vehicleModel.getDescription())
+                .active(vehicleModel.getActive())
+                .deleted(vehicleModel.getDeleted())
                 .createdAt(vehicleModel.getCreatedAt())
                 .updatedAt(vehicleModel.getUpdatedAt())
                 .build();

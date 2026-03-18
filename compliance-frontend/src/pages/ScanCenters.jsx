@@ -4,9 +4,12 @@ import {
   createScanCenter,
   deleteScanCenter,
   getScanCenters,
+  updateScanCenterStatus,
   updateScanCenter,
 } from "../api/scanCentersApi";
 import { X } from "lucide-react";
+import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
+import { notifyResponse } from "../utils/responseNotifier";
 
 export function ScanCenters() {
   const [scanCenters, setScanCenters] = useState([]);
@@ -14,6 +17,7 @@ export function ScanCenters() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -49,8 +53,8 @@ export function ScanCenters() {
         province: item.province,
         latitude: item.location?.latitude,
         longitude: item.location?.longitude,
-        status: item.isActive ? "Active" : "Inactive",
-        active: item.isActive,
+        status: item.active ? "Active" : "Inactive",
+        active: item.active,
       }));
 
       setScanCenters(normalized);
@@ -99,12 +103,12 @@ export function ScanCenters() {
       render: (value) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            value === "Active"
+            value
               ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
               : "bg-red-50 text-red-700 border border-red-100"
           }`}
         >
-          {value}
+          {value ? "Active" : "Inactive"}
         </span>
       ),
     },
@@ -159,12 +163,20 @@ export function ScanCenters() {
     const lng = Number(formData.longitude);
 
     if (!name || !city || !district || !province) {
-      alert("Please fill all required fields");
+      notifyResponse({
+        type: "error",
+        title: "Validation Error",
+        message: "Please fill all required fields",
+      });
       return;
     }
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
-      alert("Latitude and Longitude must be valid numbers");
+      notifyResponse({
+        type: "error",
+        title: "Validation Error",
+        message: "Latitude and Longitude must be valid numbers",
+      });
       return;
     }
 
@@ -185,37 +197,79 @@ export function ScanCenters() {
         : await createScanCenter(payload);
 
       if (result.success) {
-        alert(
-          editMode
-            ? "Scan center updated successfully"
-            : "Scan center created successfully",
-        );
         setShowModal(false);
         await fetchScanCenters();
-      } else {
-        alert(result.message || "Failed to save scan center");
+      } else if (!result?.message && !result?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to save scan center",
+        });
       }
     } catch (err) {
-      alert(err.message || "Error saving scan center");
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error saving scan center",
+      });
     }
   };
 
   const handleDelete = async (row) => {
-    if (!window.confirm(`Are you sure you want to delete "${row.name}"?`)) {
+    setDeleteTarget(row);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
       return;
     }
 
+    const target = deleteTarget;
+    setDeleteTarget(null);
+
     try {
-      const result = await deleteScanCenter(row.id);
+      const result = await deleteScanCenter(target.id);
 
       if (result.success) {
-        alert("Scan center deleted successfully");
         await fetchScanCenters();
-      } else {
-        alert(result.message || "Failed to delete scan center");
+      } else if (!result?.message && !result?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: "Failed to delete scan center",
+        });
       }
     } catch (err) {
-      alert(err.message || "Error deleting scan center");
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || "Error deleting scan center",
+      });
+    }
+  };
+
+  const handleToggleStatus = async (row) => {
+    const nextActive = !row.active;
+    const actionLabel = nextActive ? "activate" : "deactivate";
+
+    try {
+      const result = await updateScanCenterStatus(row.id, nextActive);
+
+      if (result.success) {
+        await fetchScanCenters();
+      } else if (!result?.message && !result?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: `Failed to ${actionLabel} scan center`,
+        });
+      }
+    } catch (err) {
+      notifyResponse({
+        type: "error",
+        title: "Error",
+        message: err.message || `Error trying to ${actionLabel} scan center`,
+      });
     }
   };
 
@@ -250,7 +304,7 @@ export function ScanCenters() {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        showToggleAction={false}
+        onToggleStatus={handleToggleStatus}
       />
 
       {showModal && (
@@ -376,6 +430,18 @@ export function ScanCenters() {
           </div>
         </div>
       )}
+
+      <ApiResponsePopup
+        open={Boolean(deleteTarget)}
+        type="warning"
+        title="Delete Scan Center"
+        message={`Are you sure you want to delete "${deleteTarget?.name || ""}"?`}
+        buttonLabel="Delete"
+        cancelLabel="Cancel"
+        showCancel
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

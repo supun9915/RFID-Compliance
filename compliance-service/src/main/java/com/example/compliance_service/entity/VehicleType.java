@@ -31,4 +31,12 @@ public class VehicleType {
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
 }

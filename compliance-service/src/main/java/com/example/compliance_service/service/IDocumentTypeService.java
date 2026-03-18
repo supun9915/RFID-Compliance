@@ -16,4 +16,10 @@ public interface IDocumentTypeService {
     DocumentTypeResponse updateDocumentType(Long id, DocumentTypeRequest request);
 
     void deleteDocumentType(Long id);
+
+    DocumentTypeResponse activateDocumentType(Long id);
+
+    DocumentTypeResponse deactivateDocumentType(Long id);
+
+    void softDeleteDocumentType(Long id);
 }

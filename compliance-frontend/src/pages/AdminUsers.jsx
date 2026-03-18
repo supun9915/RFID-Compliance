@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { DataTable } from "../components/Shared/DataTable";
-import { createUser, getUsersByRole, updateUser } from "../api/usersApi";
+import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
+import {
+  createUser,
+  getUsersByRole,
+  softDeleteUser,
+  updateUser,
+  updateUserStatus,
+} from "../api/usersApi";
 import { getScanCenters } from "../api/scanCentersApi";
 
 const ADMIN_ROLE_NAMES = [
@@ -54,6 +61,7 @@ export function AdminUsers() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -140,7 +148,6 @@ export function AdminUsers() {
   const requiresScanCenter = SCAN_CENTER_REQUIRED_ROLES.has(selectedRoleName);
 
   const columns = [
-    { key: "id", label: "ID" },
     { key: "fullName", label: "Full Name" },
     { key: "username", label: "Username" },
     { key: "email", label: "Email" },
@@ -162,6 +169,21 @@ export function AdminUsers() {
     { key: "district", label: "District" },
     { key: "province", label: "Province" },
     {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              : "bg-red-50 text-red-700 border border-red-100"
+          }`}
+        >
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
       key: "createdAt",
       label: "Created At",
       render: (value) => (value ? new Date(value).toLocaleString() : "-"),
@@ -173,7 +195,49 @@ export function AdminUsers() {
     fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
     roleName: user.role?.name || "-",
     scanCenterName: user.scanCenterName || null,
+    status: user.active ? "Active" : "Inactive",
+    active: user.active,
   }));
+
+  const handleDelete = async (row) => {
+    setDeleteTarget(row);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    const target = deleteTarget;
+    setDeleteTarget(null);
+
+    const response = await softDeleteUser(target.id);
+    if (response && !response.error && response.success) {
+      await fetchData();
+    } else {
+      const message =
+        response?.error?.response?.data?.message ||
+        response?.message ||
+        response?.error?.message ||
+        "Failed to delete user";
+    }
+  };
+
+  const handleToggleStatus = async (row) => {
+    const nextActive = !row.active;
+    const actionLabel = nextActive ? "activate" : "deactivate";
+
+    const response = await updateUserStatus(row.id, nextActive);
+    if (response && !response.error && response.success) {
+      await fetchData();
+    } else {
+      const message =
+        response?.error?.response?.data?.message ||
+        response?.message ||
+        response?.error?.message ||
+        `Failed to ${actionLabel} user`;
+    }
+  };
 
   const openCreateModal = () => {
     const defaultRoleId = roleOptions[0]?.id ? String(roleOptions[0].id) : "";
@@ -308,8 +372,8 @@ export function AdminUsers() {
         data={tableData}
         onAdd={openCreateModal}
         onEdit={openEditModal}
-        showDeleteAction={false}
-        showToggleAction={false}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
       />
 
       {modalOpen && (
@@ -517,6 +581,18 @@ export function AdminUsers() {
           </div>
         </div>
       )}
+
+      <ApiResponsePopup
+        open={Boolean(deleteTarget)}
+        type="warning"
+        title="Delete User"
+        message={`Are you sure you want to delete user "${deleteTarget?.fullName || ""}"?`}
+        buttonLabel="Delete"
+        cancelLabel="Cancel"
+        showCancel
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

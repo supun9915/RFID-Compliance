@@ -18,4 +18,10 @@ public interface IVehicleModelService {
     VehicleModelResponse updateVehicleModel(Long id, VehicleModelRequest request);
 
     void deleteVehicleModel(Long id);
+
+    VehicleModelResponse activateVehicleModel(Long id);
+
+    VehicleModelResponse deactivateVehicleModel(Long id);
+
+    void softDeleteVehicleModel(Long id);
 }

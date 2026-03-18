@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { DataTable } from "../../components/Shared/DataTable";
+import { ApiResponsePopup } from "../../components/Shared/ApiResponsePopup";
+import { notifyResponse } from "../../utils/responseNotifier";
 import { OwnerFormModal } from "./model/OwnerFormModal";
 import {
   createUser,
   updateUser,
   getUsersByRole,
   getRoles,
+  softDeleteUser,
+  updateUserStatus,
 } from "../../api/usersApi";
 
 const EMPTY_FORM = {
@@ -26,6 +30,7 @@ export function Owners({ onViewVehicles }) {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [initialValues, setInitialValues] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -121,8 +126,61 @@ export function Owners({ onViewVehicles }) {
     setSubmitting(false);
   };
 
+  const handleDelete = async (row) => {
+    setDeleteTarget(row);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    const target = deleteTarget;
+    setDeleteTarget(null);
+
+    const response = await softDeleteUser(target.id);
+    if (response && !response.error && response.success) {
+      await fetchUsers();
+    } else {
+      const msg =
+        response?.error?.response?.data?.message ||
+        response?.message ||
+        response?.error?.message ||
+        "Failed to delete owner";
+      if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: msg,
+        });
+      }
+    }
+  };
+
+  const handleToggleStatus = async (row) => {
+    const nextActive = !row.active;
+    const actionLabel = nextActive ? "activate" : "deactivate";
+
+    const response = await updateUserStatus(row.id, nextActive);
+    if (response && !response.error && response.success) {
+      await fetchUsers();
+    } else {
+      const msg =
+        response?.error?.response?.data?.message ||
+        response?.message ||
+        response?.error?.message ||
+        `Failed to ${actionLabel} owner`;
+      if (!response?.message && !response?.error) {
+        notifyResponse({
+          type: "error",
+          title: "Error",
+          message: msg,
+        });
+      }
+    }
+  };
+
   const columns = [
-    { key: "id", label: "ID" },
     { key: "fullName", label: "Full Name" },
     { key: "username", label: "Username" },
     { key: "email", label: "Email" },
@@ -137,6 +195,21 @@ export function Owners({ onViewVehicles }) {
         </span>
       ),
     },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value === "Active"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              : "bg-red-50 text-red-700 border border-red-100"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
     { key: "createdAt", label: "Created At" },
   ];
 
@@ -144,6 +217,8 @@ export function Owners({ onViewVehicles }) {
     ...u,
     fullName: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
     roleName: u.role?.name || "-",
+    status: u.active ? "Active" : "Inactive",
+    active: u.active,
     createdAt: u.createdAt ? new Date(u.createdAt).toLocaleString() : "-",
   }));
 
@@ -164,9 +239,9 @@ export function Owners({ onViewVehicles }) {
           data={tableData}
           onAdd={openCreateModal}
           onEdit={openEditModal}
+          onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
           onVehicleDetails={(row) => onViewVehicles(row)}
-          showDeleteAction={false}
-          showToggleAction={false}
         />
       )}
 
@@ -181,6 +256,18 @@ export function Owners({ onViewVehicles }) {
           onSubmit={handleSubmit}
         />
       )}
+
+      <ApiResponsePopup
+        open={Boolean(deleteTarget)}
+        type="warning"
+        title="Delete Owner"
+        message={`Are you sure you want to delete owner "${deleteTarget?.fullName || ""}"?`}
+        buttonLabel="Delete"
+        cancelLabel="Cancel"
+        showCancel
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

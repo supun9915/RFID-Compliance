@@ -63,6 +63,7 @@ public class ReaderServiceImpl implements IReaderService {
                 .serialNumber(request.getSerialNumber())
                 .model(request.getModel())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .deleted(false)
                 .scanCenter(scanCenter)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
@@ -104,6 +105,37 @@ public class ReaderServiceImpl implements IReaderService {
         readerRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public ReaderResponse activateReader(Long id) {
+        Reader reader = readerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + id));
+        reader.setIsActive(true);
+        reader.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(readerRepository.save(reader));
+    }
+
+    @Override
+    @Transactional
+    public ReaderResponse deactivateReader(Long id) {
+        Reader reader = readerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + id));
+        reader.setIsActive(false);
+        reader.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(readerRepository.save(reader));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteReader(Long id) {
+        Reader reader = readerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + id));
+        reader.setIsActive(false);
+        reader.setDeleted(true);
+        reader.setUpdatedAt(OffsetDateTime.now());
+        readerRepository.save(reader);
+    }
+
     private ScanCenter resolveScanCenter(Long scanCenterId) {
         if (scanCenterId == null) return null;
         return scanCenterRepository.findById(scanCenterId)
@@ -119,6 +151,7 @@ public class ReaderServiceImpl implements IReaderService {
                 .serialNumber(reader.getSerialNumber())
                 .model(reader.getModel())
                 .isActive(reader.getIsActive())
+                .deleted(reader.getDeleted())
                 .scanCenterId(reader.getScanCenter() != null ? reader.getScanCenter().getId() : null)
                 .scanCenterName(reader.getScanCenter() != null ? reader.getScanCenter().getName() : null)
                 .createdAt(reader.getCreatedAt())

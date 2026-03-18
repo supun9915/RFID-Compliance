@@ -21,6 +21,8 @@ public class DocumentResponse {
     private OffsetDateTime startDate;
     private OffsetDateTime endDate;
     private String imageUrl;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

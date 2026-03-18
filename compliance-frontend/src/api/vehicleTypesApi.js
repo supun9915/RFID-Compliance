@@ -1,4 +1,4 @@
-import { GET, POST, PUT, DELETE, request } from "./apiAdapter";
+import { GET, PATCH, POST, PUT, request } from "./apiAdapter";
 
 /**
  * Fetch all vehicle types.
@@ -28,5 +28,13 @@ export const updateVehicleType = (id, vehicleTypeData) =>
  * @param {number} id - Vehicle type ID
  * @returns {Promise<{ success: boolean, message: string }>}
  */
-export const deleteVehicleType = (id) =>
-  request(`/vehicle-types/${id}`, DELETE);
+export const deleteVehicleType = (id) => request(`/vehicle-types/${id}`, PATCH);
+
+/**
+ * Manage vehicle type active/inactive status.
+ * @param {number} id - Vehicle type ID
+ * @param {boolean} active
+ * @returns {Promise<{ success: boolean, data: object, message: string }>}
+ */
+export const updateVehicleTypeStatus = (id, active) =>
+  request(`/vehicle-types/${id}/status`, PATCH, undefined, { active });

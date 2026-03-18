@@ -44,6 +44,8 @@ public class VehicleMakeServiceImpl implements IVehicleMakeService {
         VehicleMake vehicleMake = VehicleMake.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -78,11 +80,44 @@ public class VehicleMakeServiceImpl implements IVehicleMakeService {
         vehicleMakeRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VehicleMakeResponse activateVehicleMake(Long id) {
+        VehicleMake vehicleMake = vehicleMakeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle make not found with id: " + id));
+        vehicleMake.setActive(true);
+        vehicleMake.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleMakeRepository.save(vehicleMake));
+    }
+
+    @Override
+    @Transactional
+    public VehicleMakeResponse deactivateVehicleMake(Long id) {
+        VehicleMake vehicleMake = vehicleMakeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle make not found with id: " + id));
+        vehicleMake.setActive(false);
+        vehicleMake.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(vehicleMakeRepository.save(vehicleMake));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteVehicleMake(Long id) {
+        VehicleMake vehicleMake = vehicleMakeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle make not found with id: " + id));
+        vehicleMake.setActive(false);
+        vehicleMake.setDeleted(true);
+        vehicleMake.setUpdatedAt(OffsetDateTime.now());
+        vehicleMakeRepository.save(vehicleMake);
+    }
+
     private VehicleMakeResponse mapToResponse(VehicleMake vehicleMake) {
         return VehicleMakeResponse.builder()
                 .id(vehicleMake.getId())
                 .name(vehicleMake.getName())
                 .description(vehicleMake.getDescription())
+                .active(vehicleMake.getActive())
+                .deleted(vehicleMake.getDeleted())
                 .createdAt(vehicleMake.getCreatedAt())
                 .updatedAt(vehicleMake.getUpdatedAt())
                 .build();

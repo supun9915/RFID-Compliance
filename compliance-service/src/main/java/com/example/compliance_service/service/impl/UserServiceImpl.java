@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -127,7 +128,11 @@ public class UserServiceImpl implements IUserService {
                         .id(user.getRole().getId())
                         .name(user.getRole().getName())
                         .description(user.getRole().getDescription())
+                        .active(user.getRole().getActive())
+                        .deleted(user.getRole().getDeleted())
                         .build())
+                .active(user.getActive())
+                .deleted(user.getDeleted())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .vehicles(vehicleResponses)
@@ -246,6 +251,8 @@ public class UserServiceImpl implements IUserService {
                 .district(request.getDistrict())
                 .province(request.getProvince())
                 .scanCenter(request.getScanCenterId() != null ? resolveScanCenter(request.getScanCenterId()) : null)
+                .active(true)
+                .deleted(false)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(null)
                 .role(role)
@@ -333,41 +340,73 @@ public class UserServiceImpl implements IUserService {
 
        EpcResponse epcResponse = generateEpc(vehicleOwnerRequest.getVehicleTypeId(), vehicleOwnerRequest.getVehicleModelId());
 
-       // Check if registration number already exists
+        // Check if registration number already exists (active vehicle)
         if (vehicleOwnerRequest.getRegistrationNumber() != null &&
-                vehicleRepository.existsByRegistrationNumber(vehicleOwnerRequest.getRegistrationNumber())) {
+                vehicleRepository.existsByRegistrationNumberAndActiveTrue(vehicleOwnerRequest.getRegistrationNumber())) {
             throw new UserAlreadyExistsException("Vehicle with registration number " + vehicleOwnerRequest.getRegistrationNumber() + " already exists");
         }
 
-        // Check if vehicle number already exists
+        // Check if vehicle number already exists (active vehicle)
         if (vehicleOwnerRequest.getVehicleNumber() != null &&
-                vehicleRepository.existsByVehicleNumber(vehicleOwnerRequest.getVehicleNumber())) {
+                vehicleRepository.existsByVehicleNumberAndActiveTrue(vehicleOwnerRequest.getVehicleNumber())) {
             throw new UserAlreadyExistsException("Vehicle with vehicle number " + vehicleOwnerRequest.getVehicleNumber() + " already exists");
         }
 
-        // Check if chassis number already exists
+        // Check if chassis number already exists (active vehicle)
         if (vehicleOwnerRequest.getChassisNumber() != null &&
-                vehicleRepository.existsByChassisNumber(vehicleOwnerRequest.getChassisNumber())) {
+                vehicleRepository.existsByChassisNumberAndActiveTrue(vehicleOwnerRequest.getChassisNumber())) {
             throw new UserAlreadyExistsException("Vehicle with chassis number " + vehicleOwnerRequest.getChassisNumber() + " already exists");
         }
 
-         // Create new vehicle
-        Vehicle vehicle = Vehicle.builder()
-                .owner(user)
-                .vehicleType(vehicleOwnerRequest.getVehicleTypeId() != null ? resolveVehicleType(vehicleOwnerRequest.getVehicleTypeId()) : null)
-                .vehicleModel(vehicleOwnerRequest.getVehicleModelId() != null ? resolveVehicleModel(vehicleOwnerRequest.getVehicleModelId()) : null)
-                .registrationNumber(vehicleOwnerRequest.getRegistrationNumber())
-                .vehicleNumber(vehicleOwnerRequest.getVehicleNumber())
-                .chassisNumber(vehicleOwnerRequest.getChassisNumber())
-                .epc(epcResponse.getEpc())
-                .registeredYear(vehicleOwnerRequest.getRegisteredYear())
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(null)
-                .nextSerialNumber(epcResponse.getNextSerialNumber())
+        // Check for an existing inactive/unowned vehicle with matching identifiers — reuse it if found
+        Optional<Vehicle> recycledVehicleOpt = vehicleRepository.findFirstInactiveUnownedByAnyIdentifier(
+                vehicleOwnerRequest.getRegistrationNumber(),
+                vehicleOwnerRequest.getVehicleNumber(),
+                vehicleOwnerRequest.getChassisNumber());
 
-                .build();
-
-        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        Vehicle savedVehicle;
+        if (recycledVehicleOpt.isPresent()) {
+            // Reuse the existing vehicle: reassign owner and update all fields
+            Vehicle recycled = recycledVehicleOpt.get();
+            recycled.setOwner(user);
+            recycled.setActive(true);
+            if (vehicleOwnerRequest.getVehicleTypeId() != null) {
+                recycled.setVehicleType(resolveVehicleType(vehicleOwnerRequest.getVehicleTypeId()));
+            }
+            if (vehicleOwnerRequest.getVehicleModelId() != null) {
+                recycled.setVehicleModel(resolveVehicleModel(vehicleOwnerRequest.getVehicleModelId()));
+            }
+            if (vehicleOwnerRequest.getRegistrationNumber() != null) {
+                recycled.setRegistrationNumber(vehicleOwnerRequest.getRegistrationNumber());
+            }
+            if (vehicleOwnerRequest.getVehicleNumber() != null) {
+                recycled.setVehicleNumber(vehicleOwnerRequest.getVehicleNumber());
+            }
+            if (vehicleOwnerRequest.getChassisNumber() != null) {
+                recycled.setChassisNumber(vehicleOwnerRequest.getChassisNumber());
+            }
+            if (vehicleOwnerRequest.getRegisteredYear() != null) {
+                recycled.setRegisteredYear(vehicleOwnerRequest.getRegisteredYear());
+            }
+            recycled.setUpdatedAt(OffsetDateTime.now());
+            savedVehicle = vehicleRepository.save(recycled);
+        } else {
+            // Create new vehicle
+            Vehicle vehicle = Vehicle.builder()
+                    .owner(user)
+                    .vehicleType(vehicleOwnerRequest.getVehicleTypeId() != null ? resolveVehicleType(vehicleOwnerRequest.getVehicleTypeId()) : null)
+                    .vehicleModel(vehicleOwnerRequest.getVehicleModelId() != null ? resolveVehicleModel(vehicleOwnerRequest.getVehicleModelId()) : null)
+                    .registrationNumber(vehicleOwnerRequest.getRegistrationNumber())
+                    .vehicleNumber(vehicleOwnerRequest.getVehicleNumber())
+                    .chassisNumber(vehicleOwnerRequest.getChassisNumber())
+                    .epc(epcResponse.getEpc())
+                    .registeredYear(vehicleOwnerRequest.getRegisteredYear())
+                    .createdAt(OffsetDateTime.now())
+                    .updatedAt(null)
+                    .nextSerialNumber(epcResponse.getNextSerialNumber())
+                    .build();
+            savedVehicle = vehicleRepository.save(vehicle);
+        }
 
         // Handle documents if provided
         List<Document> savedDocuments = Collections.emptyList();
@@ -847,6 +886,126 @@ public class UserServiceImpl implements IUserService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public VehicleDocumentResponse removeVehicleFromOwner(Long userId, Long vehicleId) {
+        // Verify user exists
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Find the vehicle that belongs to this owner
+        Vehicle vehicle = vehicleRepository.findByIdAndOwnerId(vehicleId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Vehicle not found with id: " + vehicleId + " for user id: " + userId));
+
+        // Detach owner and deactivate vehicle
+        vehicle.setOwner(null);
+        vehicle.setActive(false);
+        vehicle.setUpdatedAt(OffsetDateTime.now());
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+        // Build and return VehicleDocumentResponse for the updated vehicle
+        List<DocumentResponse> documentResponses = documentRepository.findByVehicleId(savedVehicle.getId())
+                .stream()
+                .map(doc -> DocumentResponse.builder()
+                        .id(doc.getId())
+                        .vehicleId(savedVehicle.getId())
+                        .vehicleRegistrationNumber(savedVehicle.getRegistrationNumber())
+                        .documentType(doc.getDocumentType() != null
+                                ? DocumentTypeResponse.builder()
+                                        .id(doc.getDocumentType().getId())
+                                        .name(doc.getDocumentType().getName())
+                                        .description(doc.getDocumentType().getDescription())
+                                        .build()
+                                : null)
+                        .referenceNumber(doc.getReferenceNumber())
+                        .imageUrl(doc.getImageUrl())
+                        .startDate(doc.getStartDate())
+                        .endDate(doc.getEndDate())
+                        .createdAt(doc.getCreatedAt())
+                        .updatedAt(doc.getUpdatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        VehicleTypeResponse vehicleTypeResponse = savedVehicle.getVehicleType() != null
+                ? VehicleTypeResponse.builder()
+                        .id(savedVehicle.getVehicleType().getId())
+                        .name(savedVehicle.getVehicleType().getName())
+                        .description(savedVehicle.getVehicleType().getDescription())
+                        .zplCode(savedVehicle.getVehicleType().getZplCode())
+                        .createdAt(savedVehicle.getVehicleType().getCreatedAt())
+                        .updatedAt(savedVehicle.getVehicleType().getUpdatedAt())
+                        .build()
+                : null;
+
+        VehicleModelResponse vehicleModelResponse = null;
+        if (savedVehicle.getVehicleModel() != null) {
+            VehicleMakeResponse makeResponse = savedVehicle.getVehicleModel().getMake() != null
+                    ? VehicleMakeResponse.builder()
+                            .id(savedVehicle.getVehicleModel().getMake().getId())
+                            .name(savedVehicle.getVehicleModel().getMake().getName())
+                            .description(savedVehicle.getVehicleModel().getMake().getDescription())
+                            .createdAt(savedVehicle.getVehicleModel().getMake().getCreatedAt())
+                            .updatedAt(savedVehicle.getVehicleModel().getMake().getUpdatedAt())
+                            .build()
+                    : null;
+            vehicleModelResponse = VehicleModelResponse.builder()
+                    .id(savedVehicle.getVehicleModel().getId())
+                    .name(savedVehicle.getVehicleModel().getName())
+                    .description(savedVehicle.getVehicleModel().getDescription())
+                    .make(makeResponse)
+                    .createdAt(savedVehicle.getVehicleModel().getCreatedAt())
+                    .updatedAt(savedVehicle.getVehicleModel().getUpdatedAt())
+                    .build();
+        }
+
+        return VehicleDocumentResponse.builder()
+                .id(savedVehicle.getId())
+                .vehicleType(vehicleTypeResponse)
+                .vehicleModel(vehicleModelResponse)
+                .owner(null)
+                .registrationNumber(savedVehicle.getRegistrationNumber())
+                .vehicleNumber(savedVehicle.getVehicleNumber())
+                .chassisNumber(savedVehicle.getChassisNumber())
+                .epc(savedVehicle.getEpc())
+                .registeredYear(savedVehicle.getRegisteredYear())
+                .createdAt(savedVehicle.getCreatedAt())
+                .updatedAt(savedVehicle.getUpdatedAt())
+                .documents(documentResponses)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public UserResponse activateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setActive(true);
+        user.setUpdatedAt(OffsetDateTime.now());
+        return mapToUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public UserResponse deactivateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setActive(false);
+        user.setUpdatedAt(OffsetDateTime.now());
+        return mapToUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setActive(false);
+        user.setDeleted(true);
+        user.setUpdatedAt(OffsetDateTime.now());
+        userRepository.save(user);
+    }
+
     private VehicleType resolveVehicleType(@NotNull(message = "Vehicle type ID is required") Long vehicleTypeId) {
         return vehicleTypeRepository.findById(vehicleTypeId).orElseThrow(
                 () -> new ResourceNotFoundException("Vehicle type not found with id: " + vehicleTypeId));
@@ -899,6 +1058,8 @@ public class UserServiceImpl implements IUserService {
                         .name(user.getRole().getName())
                         .description(user.getRole().getDescription())
                         .build())
+                .active(user.getActive())
+                .deleted(user.getDeleted())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

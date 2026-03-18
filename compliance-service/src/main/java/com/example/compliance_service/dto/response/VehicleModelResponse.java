@@ -17,6 +17,8 @@ public class VehicleModelResponse {
     private String name;
     private VehicleMakeResponse make;
     private String description;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

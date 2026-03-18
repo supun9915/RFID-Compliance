@@ -20,6 +20,7 @@ public class ReaderResponse {
     private String serialNumber;
     private String model;
     private Boolean isActive;
+    private Boolean deleted;
     private Long scanCenterId;
     private String scanCenterName;
     private OffsetDateTime createdAt;

@@ -1,4 +1,4 @@
-import { GET, POST, PUT, DELETE, request } from "./apiAdapter";
+import { GET, PATCH, POST, PUT, request } from "./apiAdapter";
 
 /**
  * Fetch all vehicle models.
@@ -45,4 +45,13 @@ export const updateVehicleModel = (id, data) =>
  * @returns {Promise<{ success: boolean, message: string }>}
  */
 export const deleteVehicleModel = (id) =>
-  request(`/vehicle-models/${id}`, DELETE);
+  request(`/vehicle-models/${id}`, PATCH);
+
+/**
+ * Manage vehicle model active/inactive status.
+ * @param {number} id
+ * @param {boolean} active
+ * @returns {Promise<{ success: boolean, data: object, message: string }>}
+ */
+export const updateVehicleModelStatus = (id, active) =>
+  request(`/vehicle-models/${id}/status`, PATCH, undefined, { active });

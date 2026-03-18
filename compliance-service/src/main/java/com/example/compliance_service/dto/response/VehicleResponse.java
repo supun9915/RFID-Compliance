@@ -22,6 +22,8 @@ public class VehicleResponse {
     private String chassisNumber;
     private String epc;
     private Integer registeredYear;
+    private Boolean active;
+    private Boolean deleted;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

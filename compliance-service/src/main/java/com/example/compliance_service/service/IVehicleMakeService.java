@@ -16,4 +16,10 @@ public interface IVehicleMakeService {
     VehicleMakeResponse updateVehicleMake(Long id, VehicleMakeRequest request);
 
     void deleteVehicleMake(Long id);
+
+    VehicleMakeResponse activateVehicleMake(Long id);
+
+    VehicleMakeResponse deactivateVehicleMake(Long id);
+
+    void softDeleteVehicleMake(Long id);
 }

@@ -1,4 +1,4 @@
-import { GET, POST, PUT, request } from "./apiAdapter";
+import { GET, PATCH, POST, PUT, request } from "./apiAdapter";
 
 /**
  * Fetch all users.
@@ -77,7 +77,23 @@ export const updateUser = async (userData) => {
  * @param {string} userId
  * @returns {Promise<{ success: boolean, data: object, message: string }>}
  */
-export const deleteUser = (userId) => request(`/users/${userId}`, "DELETE");
+export const deleteUser = (userId) => request(`/users/${userId}`, PATCH);
+
+/**
+ * Soft delete a user.
+ * @param {string|number} userId
+ * @returns {Promise<{ success: boolean, data?: object, message: string }>}
+ */
+export const softDeleteUser = (userId) => request(`/users/${userId}`, PATCH);
+
+/**
+ * Manage user active/inactive status.
+ * @param {string|number} userId
+ * @param {boolean} active
+ * @returns {Promise<{ success: boolean, data?: object, message: string }>}
+ */
+export const updateUserStatus = (userId, active) =>
+  request(`/users/${userId}/status`, PATCH, undefined, { active });
 
 /**
  * Fetch a single user (owner) by ID, including their vehicleDocumentResponseList.
@@ -140,6 +156,33 @@ export const updateVehicleForOwner = async (vehicleId, vehicleData) => {
       response?.error?.response?.data?.message ||
       response?.error?.message ||
       "Failed to update vehicle";
+    return { success: false, data: null, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
+};
+
+/**
+ * Remove a vehicle from an owner.
+ * @param {number|string} userId
+ * @param {number|string} vehicleId
+ * @returns {Promise<{ success: boolean, data: object, message: string }>}
+ */
+export const removeVehicleFromOwner = async (userId, vehicleId) => {
+  const response = await request(
+    `/users/${userId}/vehicles/${vehicleId}/remove`,
+    PATCH,
+  );
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to remove vehicle";
     return { success: false, data: null, message };
   }
 

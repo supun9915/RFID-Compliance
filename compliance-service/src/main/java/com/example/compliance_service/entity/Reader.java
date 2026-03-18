@@ -34,7 +34,12 @@ public class Reader {
     private String model;
 
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scan_center_id")

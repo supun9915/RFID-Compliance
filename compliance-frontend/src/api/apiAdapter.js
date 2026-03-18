@@ -108,10 +108,13 @@ const request = async (
     const responseBody = result.data;
     if (
       type !== GET &&
-      responseBody?.success === true &&
+      typeof responseBody?.success === "boolean" &&
       responseBody?.message
     ) {
-      notifyApiMessage({ success: true, message: responseBody.message });
+      notifyApiMessage({
+        success: responseBody.success,
+        message: responseBody.message,
+      });
     }
 
     return responseBody;
