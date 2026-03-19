@@ -112,7 +112,7 @@ async function main() {
 
   for (let i = 0; i < scanCenters.length; i++) {
     const sc = scanCenters[i];
-    for (let j = 1; j <= 2; j++) {
+    for (let j = 1; j <= 1; j++) {
       const serial = `RFID-${String(i + 1).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
       const readerName = `${sc.name} - Reader ${j}`;
 

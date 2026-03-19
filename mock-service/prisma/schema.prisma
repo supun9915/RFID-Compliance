@@ -8,18 +8,21 @@ datasource db {
 }
 
 model detection_history {
-  id                BigInt      @id @default(autoincrement())
+  id                BigInt       @id @default(autoincrement())
   vehicle_id        BigInt?
   reader_id         BigInt?
-  detected_at       DateTime?   @default(now()) @db.Timestamp(6)
-  compliance_status String      @db.VarChar(50)
-  violation_details String?
-  created_at        DateTime?   @default(now()) @db.Timestamp(6)
-  fix_reader        fix_reader? @relation(fields: [reader_id], references: [id], onUpdate: NoAction, map: "fk_detection_fix_reader")
-  vehicle           vehicle?    @relation(fields: [vehicle_id], references: [id], onUpdate: NoAction, map: "fk_detection_vehicle")
+  compliance_status String       @db.VarChar(50)
+  description       String?
+  created_at        DateTime?    @default(now()) @db.Timestamp(6)
+  owner_id          BigInt?
+  scancenter_id     BigInt?
+  comment           String?
+  fix_reader        fix_reader?  @relation(fields: [reader_id], references: [id], onUpdate: NoAction, map: "fk_detection_fix_reader")
+  users             users?       @relation(fields: [owner_id], references: [id], onUpdate: NoAction, map: "fk_detection_owner")
+  scan_center       scan_center? @relation(fields: [scancenter_id], references: [id], onUpdate: NoAction, map: "fk_detection_scan_center")
+  vehicle           vehicle?     @relation(fields: [vehicle_id], references: [id], onUpdate: NoAction, map: "fk_detection_vehicle")
 
   @@index([compliance_status], map: "idx_detection_status")
-  @@index([detected_at], map: "idx_detection_timestamp")
   @@index([vehicle_id], map: "idx_detection_vehicle")
 }
 
@@ -33,6 +36,8 @@ model document {
   image_url        String?        @db.VarChar(500)
   created_at       DateTime?      @default(now()) @db.Timestamp(6)
   updated_at       DateTime?      @default(now()) @db.Timestamp(6)
+  is_active        Boolean        @default(true)
+  is_deleted       Boolean        @default(false)
   document_type    document_type? @relation(fields: [document_type_id], references: [id], onUpdate: NoAction, map: "fk_document_document_type")
   vehicle          vehicle?       @relation(fields: [vehicle_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_document_vehicle")
 
@@ -44,6 +49,11 @@ model document_type {
   id          BigInt     @id @default(autoincrement())
   name        String     @unique @db.VarChar(100)
   description String?    @db.VarChar(255)
+  is_active   Boolean    @default(true)
+  is_deleted  Boolean    @default(false)
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamp(6)
+  duration    Int?
   document    document[]
 }
 
@@ -58,6 +68,7 @@ model fix_reader {
   scan_center_id    BigInt?
   created_at        DateTime?           @default(now()) @db.Timestamp(6)
   updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  is_deleted        Boolean             @default(false)
   detection_history detection_history[]
   scan_center       scan_center?        @relation(fields: [scan_center_id], references: [id], onUpdate: NoAction, map: "fk_fix_reader_scan_center")
 }
@@ -78,44 +89,53 @@ model flyway_schema_history {
 }
 
 model role {
-  id          BigInt  @id @default(autoincrement())
-  name        String  @unique @db.VarChar(50)
-  description String? @db.VarChar(255)
+  id          BigInt    @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50)
+  description String?   @db.VarChar(255)
+  is_active   Boolean   @default(true)
+  is_deleted  Boolean   @default(false)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
   users       users[]
 }
 
 model scan_center {
-  id         BigInt       @id @default(autoincrement())
-  name       String       @db.VarChar(100)
-  location   Json?
-  city       String?      @db.VarChar(100)
-  district   String?      @db.VarChar(100)
-  province   String?      @db.VarChar(100)
-  is_active  Boolean      @default(true)
-  created_at DateTime?    @default(now()) @db.Timestamp(6)
-  updated_at DateTime?    @default(now()) @db.Timestamp(6)
-  fix_reader fix_reader[]
-  users      users[]
+  id                BigInt              @id @default(autoincrement())
+  name              String              @db.VarChar(100)
+  location          Json?
+  city              String?             @db.VarChar(100)
+  district          String?             @db.VarChar(100)
+  province          String?             @db.VarChar(100)
+  is_active         Boolean             @default(true)
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  is_deleted        Boolean             @default(false)
+  detection_history detection_history[]
+  fix_reader        fix_reader[]
+  users             users[]
 }
 
 model users {
-  id             BigInt       @id @default(autoincrement())
-  username       String       @unique @db.VarChar(100)
-  email          String       @unique @db.VarChar(100)
-  password       String       @db.VarChar(255)
-  first_name     String?      @db.VarChar(100)
-  last_name      String?      @db.VarChar(100)
-  role_id        BigInt?
-  contact_number String?      @db.VarChar(20)
-  nic            String?      @db.VarChar(20)
-  district       String?      @db.VarChar(100)
-  province       String?      @db.VarChar(100)
-  scan_center_id BigInt?
-  created_at     DateTime?    @default(now()) @db.Timestamp(6)
-  updated_at     DateTime?    @default(now()) @db.Timestamp(6)
-  role           role?        @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "fk_users_role")
-  scan_center    scan_center? @relation(fields: [scan_center_id], references: [id], onUpdate: NoAction, map: "fk_users_scan_center")
-  vehicle        vehicle[]
+  id                BigInt              @id @default(autoincrement())
+  username          String              @unique @db.VarChar(100)
+  email             String              @unique @db.VarChar(100)
+  password          String              @db.VarChar(255)
+  first_name        String?             @db.VarChar(100)
+  last_name         String?             @db.VarChar(100)
+  role_id           BigInt?
+  contact_number    String?             @db.VarChar(20)
+  nic               String?             @db.VarChar(20)
+  district          String?             @db.VarChar(100)
+  province          String?             @db.VarChar(100)
+  scan_center_id    BigInt?
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  is_active         Boolean             @default(true)
+  is_deleted        Boolean             @default(false)
+  detection_history detection_history[]
+  role              role?               @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "fk_users_role")
+  scan_center       scan_center?        @relation(fields: [scan_center_id], references: [id], onUpdate: NoAction, map: "fk_users_scan_center")
+  vehicle           vehicle[]
 
   @@index([email], map: "idx_users_email")
   @@index([username], map: "idx_users_username")
@@ -133,6 +153,9 @@ model vehicle {
   registered_year     Int?
   created_at          DateTime?           @default(now()) @db.Timestamp(6)
   updated_at          DateTime?           @default(now()) @db.Timestamp(6)
+  next_serial_number  BigInt?
+  is_active           Boolean             @default(true)
+  is_deleted          Boolean             @default(false)
   detection_history   detection_history[]
   document            document[]
   users               users?              @relation(fields: [owner_id], references: [id], onUpdate: NoAction, map: "fk_vehicle_owner")
@@ -150,6 +173,8 @@ model vehicle_make {
   description   String?
   created_at    DateTime?       @default(now()) @db.Timestamp(6)
   updated_at    DateTime?       @default(now()) @db.Timestamp(6)
+  is_active     Boolean         @default(true)
+  is_deleted    Boolean         @default(false)
   vehicle_model vehicle_model[]
 }
 
@@ -160,6 +185,8 @@ model vehicle_model {
   description  String?
   created_at   DateTime?     @default(now()) @db.Timestamp(6)
   updated_at   DateTime?     @default(now()) @db.Timestamp(6)
+  is_active    Boolean       @default(true)
+  is_deleted   Boolean       @default(false)
   vehicle      vehicle[]
   vehicle_make vehicle_make? @relation(fields: [make_id], references: [id], onUpdate: NoAction, map: "fk_vehicle_model_make")
 }
@@ -171,5 +198,7 @@ model vehicle_type {
   zpl_code    String?
   created_at  DateTime? @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  is_active   Boolean   @default(true)
+  is_deleted  Boolean   @default(false)
   vehicle     vehicle[]
 }

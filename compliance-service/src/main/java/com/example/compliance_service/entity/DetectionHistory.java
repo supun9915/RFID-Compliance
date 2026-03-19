@@ -25,15 +25,25 @@ public class DetectionHistory {
     @JoinColumn(name = "reader_id")
     private Reader reader;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-    @Column(name = "detected_at")
-    private OffsetDateTime detectedAt;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "scancenter_id")
+    private ScanCenter scanCenter;
 
     @Column(name = "compliance_status", nullable = false, length = 50)
     private String complianceStatus;
 
-    @Column(name = "violation_details", columnDefinition = "TEXT")
-    private String violationDetails;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "compliance_message", columnDefinition = "TEXT")
+    private String complianceMessage;
+
+    @Column(name = "comment", columnDefinition = "TEXT")
+    private String comment;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;

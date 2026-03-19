@@ -93,7 +93,7 @@ public class VehicleServiceImpl implements IVehicleService {
             throw new IllegalArgumentException("User role must be OWNER to be assigned as vehicle owner");
         }
 
-        EpcResponse epcResponse = generateEpc(request.getVehicleTypeId(), request.getOwnerId());
+        EpcResponse epcResponse = generateEpc(request.getVehicleTypeId(), request.getVehicleModelId());
 
 
         Vehicle vehicle = Vehicle.builder()
@@ -116,14 +116,28 @@ public class VehicleServiceImpl implements IVehicleService {
         return mapToResponse(savedVehicle);
     }
 
-    private EpcResponse generateEpc(Long vehicleTypeId, Long ownerId) {
-        // Get the last created vehicle (desc by id) and use its id + 1 as the next serial number
-        Vehicle lastVehicle = vehicleRepository.findTopByOrderByIdDesc().orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleTypeId));
+    private EpcResponse generateEpc(Long vehicleTypeId, Long vehicleModelId) {
+        // Determine the next serial number from the last vehicle record
+        long nextSerial = vehicleRepository.findTopByOrderByIdDesc()
+                .map(v -> v.getNextSerialNumber() != null ? v.getNextSerialNumber() : 1L)
+                .orElse(1L);
 
+        // Build a 96-bit (12-byte) EPC as a 24-character uppercase hex string:
+        //   Byte  0    : 0x01  – header/version
+        //   Bytes 1–2  : vehicleTypeId  (16-bit, max 65535)
+        //   Bytes 3–4  : vehicleModelId (16-bit, max 65535)
+        //   Bytes 5–8  : 0x00000000     – reserved
+        //   Bytes 9–11 : serialNumber   (24-bit, max 16777215)
+        long safeTypeId  = vehicleTypeId  != null ? vehicleTypeId  & 0xFFFFL : 0L;
+        long safeModelId = vehicleModelId != null ? vehicleModelId & 0xFFFFL : 0L;
+        long safeSerial  = nextSerial & 0xFFFFFFL;
+
+        String epc = String.format("01%04X%04X00000000%06X",
+                safeTypeId, safeModelId, safeSerial);
 
         EpcResponse epcResponse = new EpcResponse();
-        epcResponse.setEpc(String.format("%s-%s-%06d", vehicleTypeId, ownerId, lastVehicle.getNextSerialNumber()));
-        epcResponse.setNextSerialNumber(lastVehicle.getNextSerialNumber() + 1);
+        epcResponse.setEpc(epc);
+        epcResponse.setNextSerialNumber(nextSerial + 1);
         return epcResponse;
     }
 

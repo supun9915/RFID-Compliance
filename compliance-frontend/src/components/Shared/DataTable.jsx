@@ -11,6 +11,7 @@ import {
   ChevronsRight,
   Plus,
   Car,
+  Cpu,
 } from "lucide-react";
 export function DataTable({
   title,
@@ -21,6 +22,7 @@ export function DataTable({
   onDelete,
   onToggleStatus,
   onVehicleDetails,
+  onManageReaders,
   showAddButton = true,
   showActions = true,
   showDeleteAction = true,
@@ -109,6 +111,15 @@ export function DataTable({
                   {showActions && (
                     <td className="sticky right-0 z-20 px-6 py-3 text-center bg-white group-hover:bg-gray-50 border-l border-gray-100 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-center gap-2 transition-opacity">
+                        {onManageReaders && (
+                          <button
+                            className="p-1.5 bg-violet-50 hover:bg-violet-100 rounded-md transition-colors"
+                            title="Manage Readers"
+                            onClick={() => onManageReaders(row)}
+                          >
+                            <Cpu className="w-4 h-4 text-violet-600" />
+                          </button>
+                        )}
                         {onVehicleDetails && (
                           <button
                             className="p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"

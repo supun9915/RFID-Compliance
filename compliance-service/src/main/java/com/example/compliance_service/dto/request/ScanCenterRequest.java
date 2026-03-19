@@ -1,12 +1,15 @@
 package com.example.compliance_service.dto.request;
 
 import com.example.compliance_service.entity.Location;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -30,5 +33,8 @@ public class ScanCenterRequest {
     private String province;
 
     private Boolean isActive = true;
+
+    @Valid
+    private List<ReadersRequest> readers;
 }
 

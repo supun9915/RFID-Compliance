@@ -126,3 +126,116 @@ export const updateScanCenterStatus = async (id, active) => {
     message: response.message,
   };
 };
+
+/**
+ * Fetch a single scan center by ID (includes its readers).
+ * @param {number} id
+ * @returns {Promise<{ success: boolean, data?: object, message?: string }>}
+ */
+export const getScanCenter = async (id) => {
+  const response = await request(`/scan-centers/${id}`, GET);
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to fetch scan center";
+
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
+};
+
+/**
+ * Create a reader for a specific scan center.
+ * POST /readers/scan-center/{scanCenterId}
+ * @param {number} scanCenterId
+ * @param {{ name: string, location?: string, ipAddress?: string, serialNumber?: string, model?: string, isActive?: boolean }} payload
+ * @returns {Promise<{ success: boolean, data?: object, message?: string }>}
+ */
+export const createReader = async (scanCenterId, payload) => {
+  const response = await request(
+    `/readers/scan-center/${scanCenterId}`,
+    POST,
+    payload,
+  );
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to create reader";
+
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
+};
+
+/**
+ * Update a reader belonging to a specific scan center.
+ * PUT /readers/scan-center/{scanCenterId}/{readerId}
+ * @param {number} scanCenterId
+ * @param {number} readerId
+ * @param {{ name: string, location?: string, ipAddress?: string, serialNumber?: string, model?: string, isActive?: boolean }} payload
+ * @returns {Promise<{ success: boolean, data?: object, message?: string }>}
+ */
+export const updateReader = async (scanCenterId, readerId, payload) => {
+  const response = await request(
+    `/readers/scan-center/${scanCenterId}/${readerId}`,
+    PUT,
+    payload,
+  );
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to update reader";
+
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
+};
+
+/**
+ * Delete a reader belonging to a specific scan center.
+ * DELETE /readers/scan-center/{scanCenterId}/{readerId}
+ * @param {number} scanCenterId
+ * @param {number} readerId
+ * @returns {Promise<{ success: boolean, message?: string }>}
+ */
+export const deleteReader = async (scanCenterId, readerId) => {
+  const response = await request(
+    `/readers/scan-center/${scanCenterId}/${readerId}`,
+    DELETE,
+  );
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to delete reader";
+
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    message: response.message,
+  };
+};

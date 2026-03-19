@@ -14,6 +14,7 @@ public class DocumentTypeResponse {
     private Long id;
     private String name;
     private String description;
+    private Integer duration;
     private Boolean active;
     private Boolean deleted;
 }

@@ -22,6 +22,9 @@ public class DocumentType {
 
     private String description;
 
+    @Column(name = "duration")
+    private Integer duration;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean active = true;

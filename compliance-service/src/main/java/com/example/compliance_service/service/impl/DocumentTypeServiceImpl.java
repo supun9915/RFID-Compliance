@@ -40,6 +40,7 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
         DocumentType documentType = DocumentType.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .duration(request.getDuration())
                 .active(true)
                 .deleted(false)
                 .createdAt(OffsetDateTime.now())
@@ -58,6 +59,7 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
 
         documentType.setName(request.getName());
         documentType.setDescription(request.getDescription());
+        documentType.setDuration(request.getDuration());
         documentType.setUpdatedAt(OffsetDateTime.now());
 
         DocumentType updatedDocumentType = documentTypeRepository.save(documentType);
@@ -109,6 +111,7 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
                 .id(documentType.getId())
                 .name(documentType.getName())
                 .description(documentType.getDescription())
+                .duration(documentType.getDuration())
                 .active(documentType.getActive())
                 .deleted(documentType.getDeleted())
                 .build();

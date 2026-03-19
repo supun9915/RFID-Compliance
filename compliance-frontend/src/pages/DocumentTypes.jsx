@@ -22,7 +22,7 @@ export function DocumentTypes() {
     id: null,
     name: "",
     description: "",
-    zplCode: "",
+    active: true,
   });
 
   const columns = [
@@ -39,9 +39,9 @@ export function DocumentTypes() {
       label: "Description",
     },
     {
-      key: "zplCode",
-      label: "ZPL Code",
-      render: (value) => value || "-",
+      key: "duration",
+      label: "Duration (months)",
+      render: (value) => (value != null && value !== "" ? value : "N/A"),
     },
     {
       key: "status",
@@ -76,7 +76,7 @@ export function DocumentTypes() {
           status: item.active ? "Active" : "Inactive",
           active: item.active,
         }));
-        active;
+        console.log("data", normalized);
         setData(normalized);
       } else {
         setError(result.message || "Failed to fetch document types");
@@ -92,7 +92,13 @@ export function DocumentTypes() {
 
   const handleAdd = () => {
     setEditMode(false);
-    setFormData({ id: null, name: "", description: "", zplCode: "" });
+    setFormData({
+      id: null,
+      name: "",
+      description: "",
+      zplCode: "",
+      duration: "",
+    });
     setShowModal(true);
   };
 
@@ -103,6 +109,7 @@ export function DocumentTypes() {
       name: row.name || "",
       description: row.description || "",
       zplCode: row.zplCode || "",
+      duration: row.duration ?? "",
     });
     setShowModal(true);
   };
@@ -179,6 +186,7 @@ export function DocumentTypes() {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
       zplCode: formData.zplCode.trim() || null,
+      duration: formData.duration !== "" ? Number(formData.duration) : null,
     };
 
     try {
@@ -188,7 +196,13 @@ export function DocumentTypes() {
 
       if (result.success) {
         setShowModal(false);
-        setFormData({ id: null, name: "", description: "", zplCode: "" });
+        setFormData({
+          id: null,
+          name: "",
+          description: "",
+          zplCode: "",
+          duration: "",
+        });
         await fetchDocumentTypes();
       } else if (!result?.message && !result?.error) {
         notifyResponse({
@@ -318,6 +332,29 @@ export function DocumentTypes() {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     placeholder="Optional ZPL code"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="duration"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Duration (Months)
+                  </label>
+                  <input
+                    id="duration"
+                    type="number"
+                    min="0"
+                    value={formData.duration}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        duration: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    placeholder="Optional duration in days"
                   />
                 </div>
               </div>

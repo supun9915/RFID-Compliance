@@ -1,6 +1,7 @@
 package com.example.compliance_service.service.impl;
 
 import com.example.compliance_service.dto.request.ReaderRequest;
+import com.example.compliance_service.dto.request.ReadersRequest;
 import com.example.compliance_service.dto.response.ReaderResponse;
 import com.example.compliance_service.entity.Reader;
 import com.example.compliance_service.entity.ScanCenter;
@@ -30,28 +31,24 @@ public class ReaderServiceImpl implements IReaderService {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public ReaderResponse getReaderById(Long id) {
         Reader reader = readerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + id));
         return mapToResponse(reader);
     }
 
-    @Override
     public ReaderResponse getReaderByName(String name) {
         Reader reader = readerRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader not found with name: " + name));
         return mapToResponse(reader);
     }
 
-    @Override
     public ReaderResponse getReaderByIpAddress(String ipAddress) {
         Reader reader = readerRepository.findByIpAddress(ipAddress)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader not found with IP address: " + ipAddress));
         return mapToResponse(reader);
     }
 
-    @Override
     @Transactional
     public ReaderResponse createReader(ReaderRequest request) {
         ScanCenter scanCenter = resolveScanCenter(request.getScanCenterId());
@@ -73,7 +70,6 @@ public class ReaderServiceImpl implements IReaderService {
         return mapToResponse(savedReader);
     }
 
-    @Override
     @Transactional
     public ReaderResponse updateReader(Long id, ReaderRequest request) {
         Reader reader = readerRepository.findById(id)
@@ -96,7 +92,6 @@ public class ReaderServiceImpl implements IReaderService {
         return mapToResponse(updatedReader);
     }
 
-    @Override
     @Transactional
     public void deleteReader(Long id) {
         if (!readerRepository.existsById(id)) {
@@ -125,7 +120,6 @@ public class ReaderServiceImpl implements IReaderService {
         return mapToResponse(readerRepository.save(reader));
     }
 
-    @Override
     @Transactional
     public void softDeleteReader(Long id) {
         Reader reader = readerRepository.findById(id)
@@ -134,6 +128,87 @@ public class ReaderServiceImpl implements IReaderService {
         reader.setDeleted(true);
         reader.setUpdatedAt(OffsetDateTime.now());
         readerRepository.save(reader);
+    }
+
+    // ── Scan-center-scoped operations ──────────────────────────────────────────
+
+    @Override
+    public List<ReaderResponse> getReadersByScanCenter(Long scanCenterId) {
+        validateScanCenterExists(scanCenterId);
+        return readerRepository.findByScanCenterId(scanCenterId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ReaderResponse getReaderByScanCenterAndId(Long scanCenterId, Long readerId) {
+        validateScanCenterExists(scanCenterId);
+        Reader reader = readerRepository.findByIdAndScanCenterId(readerId, scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Reader not found with id: " + readerId + " in scan center: " + scanCenterId));
+        return mapToResponse(reader);
+    }
+
+    @Override
+    @Transactional
+    public ReaderResponse createReaderForScanCenter(Long scanCenterId, ReadersRequest request) {
+        ScanCenter scanCenter = scanCenterRepository.findById(scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId));
+
+        Reader reader = Reader.builder()
+                .name(request.getName())
+                .location(request.getLocation())
+                .ipAddress(request.getIpAddress())
+                .serialNumber(request.getSerialNumber())
+                .model(request.getModel())
+                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .deleted(false)
+                .scanCenter(scanCenter)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
+                .build();
+
+        return mapToResponse(readerRepository.save(reader));
+    }
+
+    @Override
+    @Transactional
+    public ReaderResponse updateReaderForScanCenter(Long scanCenterId, Long readerId, ReadersRequest request) {
+        validateScanCenterExists(scanCenterId);
+        Reader reader = readerRepository.findByIdAndScanCenterId(readerId, scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Reader not found with id: " + readerId + " in scan center: " + scanCenterId));
+
+        reader.setName(request.getName());
+        reader.setLocation(request.getLocation());
+        reader.setIpAddress(request.getIpAddress());
+        reader.setSerialNumber(request.getSerialNumber());
+        reader.setModel(request.getModel());
+        if (request.getIsActive() != null) {
+            reader.setIsActive(request.getIsActive());
+        }
+        reader.setUpdatedAt(OffsetDateTime.now());
+
+        return mapToResponse(readerRepository.save(reader));
+    }
+
+    @Override
+    @Transactional
+    public void deleteReaderForScanCenter(Long scanCenterId, Long readerId) {
+        validateScanCenterExists(scanCenterId);
+        Reader reader = readerRepository.findByIdAndScanCenterId(readerId, scanCenterId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Reader not found with id: " + readerId + " in scan center: " + scanCenterId));
+        reader.setIsActive(false);
+        reader.setDeleted(true);
+        reader.setUpdatedAt(OffsetDateTime.now());
+        readerRepository.save(reader);
+    }
+
+    private void validateScanCenterExists(Long scanCenterId) {
+        if (!scanCenterRepository.existsById(scanCenterId)) {
+            throw new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId);
+        }
     }
 
     private ScanCenter resolveScanCenter(Long scanCenterId) {
