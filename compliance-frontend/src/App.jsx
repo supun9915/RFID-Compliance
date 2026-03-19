@@ -11,6 +11,8 @@ import { VehicleModels } from "./pages/VehicleModels";
 import { ScanCenters } from "./pages/ScanCenters";
 import { AdminUsers } from "./pages/AdminUsers";
 import { Settings } from "./pages/Settings";
+import { DetectionHistory } from "./pages/DetectionHistory";
+import { Account } from "./pages/Account";
 import { Login } from "./pages/Login";
 import { isAuthenticated } from "./api/authApi";
 import { ApiResponsePopup } from "./components/Shared/ApiResponsePopup";
@@ -79,8 +81,12 @@ export function App() {
         return <ScanCenters />;
       case "admins":
         return <AdminUsers />;
+      case "detections":
+        return <DetectionHistory />;
       case "settings":
         return <Settings />;
+      case "account":
+        return <Account />;
       default:
         return <Dashboard />;
     }
@@ -97,7 +103,10 @@ export function App() {
 
           {/* Main Content Wrapper */}
           <div className="flex-1 flex flex-col ml-64 min-w-0">
-            <TopBar onLogout={() => setAuthenticated(false)} />
+            <TopBar
+              onLogout={() => setAuthenticated(false)}
+              onNavigate={setCurrentPage}
+            />
 
             {/* Scrollable Content */}
             <main className="flex-1 p-6 overflow-y-auto">

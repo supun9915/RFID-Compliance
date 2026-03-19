@@ -11,6 +11,8 @@ import {
   Factory,
   Layers,
   Radar,
+  Activity,
+  UserCircle,
 } from "lucide-react";
 export function Sidebar({ activePage, onNavigate }) {
   const navItems = [
@@ -33,6 +35,11 @@ export function Sidebar({ activePage, onNavigate }) {
       id: "scanCenters",
       icon: Radar,
       label: "Scan Centers",
+    },
+    {
+      id: "detections",
+      icon: Activity,
+      label: "Detection History",
     },
     {
       id: "owners",
@@ -85,14 +92,14 @@ export function Sidebar({ activePage, onNavigate }) {
         ))}
 
         <div className="mt-8 px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          System
+          Settings
         </div>
         <button
-          onClick={() => onNavigate("settings")}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activePage === "settings" ? "bg-gray-200 text-gray-900 shadow-lg shadow-gray-900/20" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+          onClick={() => onNavigate("account")}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activePage === "account" ? "bg-gray-200 text-gray-900 shadow-lg shadow-gray-900/20" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
         >
-          <Settings className="w-5 h-5" />
-          Settings
+          <UserCircle className="w-5 h-5" />
+          My Account
         </button>
       </nav>
     </aside>

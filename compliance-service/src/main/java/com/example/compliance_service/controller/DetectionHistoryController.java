@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/detections")
@@ -35,13 +36,17 @@ public class DetectionHistoryController {
     }
 
     /**
-     * Get all detection history records.
+     * Get all detection history records with optional filters.
      * GET /api/detections
+     * GET /api/detections?vehicleId=1&status=NON_COMPLIANT
+     * GET /api/detections?scanCenterId=2&ownerId=5
+     *
+     * Supported params: id, scanCenterId, vehicleId, ownerId, readerId, status
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<?> getAllDetections() {
-        List<DetectionHistoryResponse> detections = detectionHistoryService.getAllDetections();
+    public ResponseEntity<?> getAllDetections(@RequestParam(required = false) Map<String, String> params) {
+        List<DetectionHistoryResponse> detections = detectionHistoryService.getAllDetections(params);
         return ResponseEntity.ok(ApiResponse.success("Detection history retrieved successfully", detections));
     }
 

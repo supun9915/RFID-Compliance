@@ -2,7 +2,7 @@ import React from "react";
 import { Bell, Search, Menu, LogOut, Loader2, User, X } from "lucide-react";
 import { logoutUser } from "../../api/authApi";
 
-export function TopBar({ onLogout }) {
+export function TopBar({ onLogout, onNavigate }) {
   // Read stored user info
   let user = {};
   try {
@@ -142,6 +142,20 @@ export function TopBar({ onLogout }) {
                       </span>
                     </div>
                   ))}
+                </div>
+
+                {/* My Account */}
+                <div className="px-5 pb-2">
+                  <button
+                    onClick={() => {
+                      setShowProfile(false);
+                      if (onNavigate) onNavigate("account");
+                    }}
+                    className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg py-2 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    My Account
+                  </button>
                 </div>
 
                 {/* Logout */}

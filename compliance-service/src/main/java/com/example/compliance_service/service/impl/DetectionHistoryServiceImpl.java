@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -104,10 +105,57 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
     // ── Queries ────────────────────────────────────────────────────────────────
 
     @Override
-    public List<DetectionHistoryResponse> getAllDetections() {
-        return detectionHistoryRepository.findAll().stream()
+    public List<DetectionHistoryResponse> getAllDetections(Map<String, String> params) {
+        return detectionHistoryRepository.findAll(buildSpecification(params)).stream()
                 .map(d -> mapToResponse(d, null))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Build a JPA Specification from the given request params.
+     * Supported keys: id, scanCenterId, vehicleId, ownerId, readerId, status
+     */
+    private org.springframework.data.jpa.domain.Specification<DetectionHistory> buildSpecification(
+            Map<String, String> params) {
+        return (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            if (params == null || params.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            String id = params.get("id");
+            if (id != null && !id.isBlank()) {
+                predicates.add(cb.equal(root.get("id"), Long.parseLong(id)));
+            }
+
+            String scanCenterId = params.get("scanCenterId");
+            if (scanCenterId != null && !scanCenterId.isBlank()) {
+                predicates.add(cb.equal(root.get("scanCenter").get("id"), Long.parseLong(scanCenterId)));
+            }
+
+            String vehicleId = params.get("vehicleId");
+            if (vehicleId != null && !vehicleId.isBlank()) {
+                predicates.add(cb.equal(root.get("vehicle").get("id"), Long.parseLong(vehicleId)));
+            }
+
+            String ownerId = params.get("ownerId");
+            if (ownerId != null && !ownerId.isBlank()) {
+                predicates.add(cb.equal(root.get("owner").get("id"), Long.parseLong(ownerId)));
+            }
+
+            String readerId = params.get("readerId");
+            if (readerId != null && !readerId.isBlank()) {
+                predicates.add(cb.equal(root.get("reader").get("id"), Long.parseLong(readerId)));
+            }
+
+            String status = params.get("status");
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(cb.upper(root.get("complianceStatus")), status.toUpperCase()));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
     }
 
     @Override

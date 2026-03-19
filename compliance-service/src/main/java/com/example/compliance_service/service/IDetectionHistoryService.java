@@ -4,6 +4,7 @@ import com.example.compliance_service.dto.request.DetectionRequest;
 import com.example.compliance_service.dto.response.DetectionHistoryResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IDetectionHistoryService {
 
@@ -19,9 +20,10 @@ public interface IDetectionHistoryService {
     DetectionHistoryResponse recordDetection(DetectionRequest request);
 
     /**
-     * Get all detection history records.
+     * Get all detection history records with optional filters.
+     * Supported param keys: id, scanCenterId, vehicleId, ownerId, readerId, status
      */
-    List<DetectionHistoryResponse> getAllDetections();
+    List<DetectionHistoryResponse> getAllDetections(Map<String, String> params);
 
     /**
      * Get detection history for a specific vehicle by ID.
@@ -43,4 +45,3 @@ public interface IDetectionHistoryService {
      */
     DetectionHistoryResponse getDetectionById(Long id);
 }
-
