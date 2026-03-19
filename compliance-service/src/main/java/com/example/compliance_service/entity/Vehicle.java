@@ -3,7 +3,7 @@ package com.example.compliance_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -23,11 +23,21 @@ public class Vehicle {
     private VehicleType vehicleType;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_model_id")
+    private VehicleModel vehicleModel;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id")
     private User owner;
 
     @Column(name = "registration_number", nullable = false, unique = true, length = 100)
     private String registrationNumber;
+
+    @Column(name = "vehicle_number", length = 100)
+    private String vehicleNumber;
+
+    @Column(name = "chassis_number", length = 100)
+    private String chassisNumber;
 
     @Column(nullable = false, unique = true, length = 100)
     private String epc;
@@ -36,10 +46,21 @@ public class Vehicle {
     private Integer registeredYear;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
+
+    @Column(name = "next_serial_number", length = 100)
+    private Long nextSerialNumber;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
 
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<Document> documents;

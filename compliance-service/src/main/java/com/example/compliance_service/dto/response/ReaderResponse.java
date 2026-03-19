@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -17,6 +17,12 @@ public class ReaderResponse {
     private String name;
     private String location;
     private String ipAddress;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String serialNumber;
+    private String model;
+    private Boolean isActive;
+    private Boolean deleted;
+    private Long scanCenterId;
+    private String scanCenterName;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

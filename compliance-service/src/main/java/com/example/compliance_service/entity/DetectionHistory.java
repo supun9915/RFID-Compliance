@@ -3,7 +3,7 @@ package com.example.compliance_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "detection_history")
@@ -26,19 +26,26 @@ public class DetectionHistory {
     private Reader reader;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "antenna_id")
-    private Antenna antenna;
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-    @Column(name = "detected_at")
-    private LocalDateTime detectedAt;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "scancenter_id")
+    private ScanCenter scanCenter;
 
     @Column(name = "compliance_status", nullable = false, length = 50)
     private String complianceStatus;
 
-    @Column(name = "violation_details", columnDefinition = "TEXT")
-    private String violationDetails;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "compliance_message", columnDefinition = "TEXT")
+    private String complianceMessage;
+
+    @Column(name = "comment", columnDefinition = "TEXT")
+    private String comment;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
 }

@@ -18,4 +18,6 @@ public class DocumentTypeRequest {
     private String name;
 
     private String description;
+
+    private Integer duration;
 }

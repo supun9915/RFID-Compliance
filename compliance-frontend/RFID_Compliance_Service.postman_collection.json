@@ -1,0 +1,1089 @@
+{
+  "info": {
+    "name": "RFID Compliance Service",
+    "_postman_id": "rfid-compliance-service-collection",
+    "description": "Complete API collection for the RFID Compliance Service.\n\nBase URL: {{baseUrl}}\n\nAfter calling Login, the JWT token is automatically saved to the `token` collection variable and reused in all subsequent requests via the Bearer auth header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:29288/autocomply",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints — register, login, logout.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"contactNumber\": \"0771234567\",\n  \"nic\": \"199012345678\",\n  \"district\": \"Colombo\",\n  \"province\": \"Western\",\n  \"roleId\": 1,\n  \"scanCenterId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user. Returns a JWT token on success."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token saved:', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login and receive a JWT token. The token is automatically saved to the `token` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout and invalidate the current JWT token. Requires Bearer auth header (inherited from collection)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "description": "Public endpoints — no authentication required.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "public", "health"]
+            },
+            "description": "Check if the service is running."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Roles (Public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "public", "roles"]
+            },
+            "description": "Get all available roles. Used during registration to display role options."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "id", "value": "1", "disabled": true },
+                { "key": "username", "value": "john", "disabled": true },
+                {
+                  "key": "email",
+                  "value": "john@example.com",
+                  "disabled": true
+                },
+                { "key": "firstName", "value": "John", "disabled": true },
+                { "key": "lastName", "value": "Doe", "disabled": true }
+              ]
+            },
+            "description": "Search/filter users by query parameters. Any matching User field can be used for filtering. Returns all users if no params are provided. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "Get the profile of the currently logged-in user."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"contactNumber\": \"0779876543\",\n  \"nic\": \"199512345678\",\n  \"district\": \"Gampaha\",\n  \"province\": \"Western\",\n  \"roleId\": 2,\n  \"scanCenterId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Create a new user. Requires SUPERADMIN, SYSTEM_ADMIN, or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"password\": \"newpassword123\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"contactNumber\": \"0771112222\",\n  \"nic\": \"199512345678\",\n  \"district\": \"Kandy\",\n  \"province\": \"Central\",\n  \"roleId\": 2,\n  \"scanCenterId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "1"]
+            },
+            "description": "Update an existing user by ID. Requires SUPERADMIN, SYSTEM_ADMIN, or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "1"]
+            },
+            "description": "Delete a user by ID. Requires SUPERADMIN or SYSTEM_ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "description": "Role management endpoints.",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            },
+            "description": "Get all roles. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "1"]
+            },
+            "description": "Get a role by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"INSPECTOR\",\n  \"description\": \"Vehicle inspector role\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            },
+            "description": "Create a new role. Requires SUPERADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"INSPECTOR\",\n  \"description\": \"Updated description for inspector role\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "1"]
+            },
+            "description": "Update a role by ID. Requires SUPERADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "1"]
+            },
+            "description": "Delete a role by ID. Requires SUPERADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "description": "Vehicle management endpoints.",
+      "item": [
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles"]
+            },
+            "description": "Get all registered vehicles."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "1"]
+            },
+            "description": "Get a vehicle by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle by EPC",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/epc/E200001234567890ABCD1234",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "epc", "E200001234567890ABCD1234"]
+            },
+            "description": "Get a vehicle by its RFID EPC tag value."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle by Registration Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/registration/ABC-1234",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "registration", "ABC-1234"]
+            },
+            "description": "Get a vehicle by its registration number."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicles by Owner ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/owner/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "owner", "1"]
+            },
+            "description": "Get all vehicles belonging to a specific owner (user ID)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleTypeId\": 1,\n  \"vehicleModelId\": 1,\n  \"ownerId\": 1,\n  \"registrationNumber\": \"ABC-1234\",\n  \"vehicleNumber\": \"ABC-1234\",\n  \"chassisNumber\": \"JH4KA8260MC000001\",\n  \"registeredYear\": 2020\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles"]
+            },
+            "description": "Create a new vehicle. Requires SUPERADMIN, ADMIN, or OWNER role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleTypeId\": 1,\n  \"vehicleModelId\": 2,\n  \"ownerId\": 1,\n  \"registrationNumber\": \"ABC-1234\",\n  \"vehicleNumber\": \"ABC-1234\",\n  \"chassisNumber\": \"JH4KA8260MC000001\",\n  \"registeredYear\": 2021\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "1"]
+            },
+            "description": "Update a vehicle by ID. Requires SUPERADMIN, ADMIN, or OWNER role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicles", "1"]
+            },
+            "description": "Delete a vehicle by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Makes",
+      "description": "Vehicle make (manufacturer/brand) management endpoints.",
+      "item": [
+        {
+          "name": "Get All Vehicle Makes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-makes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-makes"]
+            },
+            "description": "Get all vehicle makes."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle Make by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-makes/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-makes", "1"]
+            },
+            "description": "Get a vehicle make by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle Make",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota\",\n  \"description\": \"Toyota Motor Corporation\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-makes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-makes"]
+            },
+            "description": "Create a new vehicle make. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Make",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota\",\n  \"description\": \"Updated description for Toyota\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-makes/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-makes", "1"]
+            },
+            "description": "Update a vehicle make by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle Make",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-makes/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-makes", "1"]
+            },
+            "description": "Delete a vehicle make by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Models",
+      "description": "Vehicle model management endpoints.",
+      "item": [
+        {
+          "name": "Get All Vehicle Models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models"]
+            },
+            "description": "Get all vehicle models."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle Models by Make ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models/make/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models", "make", "1"]
+            },
+            "description": "Get all vehicle models for a specific vehicle make."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle Model by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models", "1"]
+            },
+            "description": "Get a vehicle model by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle Model",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corolla\",\n  \"makeId\": 1,\n  \"description\": \"Toyota Corolla sedan\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models"]
+            },
+            "description": "Create a new vehicle model. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Model",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corolla\",\n  \"makeId\": 1,\n  \"description\": \"Updated description for Toyota Corolla\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models", "1"]
+            },
+            "description": "Update a vehicle model by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle Model",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-models/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-models", "1"]
+            },
+            "description": "Delete a vehicle model by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Types",
+      "description": "Vehicle type management endpoints.",
+      "item": [
+        {
+          "name": "Get All Vehicle Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-types"]
+            },
+            "description": "Get all vehicle types."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-types", "1"]
+            },
+            "description": "Get a vehicle type by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle Type",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sedan\",\n  \"description\": \"Standard passenger sedan\",\n  \"zplCode\": \"^XA^FO50,50^ADN,36,20^FDSedan^FS^XZ\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-types"]
+            },
+            "description": "Create a new vehicle type. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Type",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sedan\",\n  \"description\": \"Updated description for sedan\",\n  \"zplCode\": \"^XA^FO50,50^ADN,36,20^FDSedan^FS^XZ\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-types", "1"]
+            },
+            "description": "Update a vehicle type by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-types", "1"]
+            },
+            "description": "Delete a vehicle type by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Document Types",
+      "description": "Document type management endpoints.",
+      "item": [
+        {
+          "name": "Get All Document Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/document-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "document-types"]
+            },
+            "description": "Get all document types."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/document-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "document-types", "1"]
+            },
+            "description": "Get a document type by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Document Type",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Insurance\",\n  \"description\": \"Motor vehicle insurance certificate\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/document-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "document-types"]
+            },
+            "description": "Create a new document type. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Document Type",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Insurance\",\n  \"description\": \"Updated motor vehicle insurance certificate\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/document-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "document-types", "1"]
+            },
+            "description": "Update a document type by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/document-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "document-types", "1"]
+            },
+            "description": "Delete a document type by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "description": "Vehicle document management endpoints.",
+      "item": [
+        {
+          "name": "Get All Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Get all documents."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "1"]
+            },
+            "description": "Get a document by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Documents by Vehicle ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/vehicle/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "vehicle", "1"]
+            },
+            "description": "Get all documents for a specific vehicle."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Documents by Document Type ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/type/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "type", "1"]
+            },
+            "description": "Get all documents of a specific document type."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Expired Documents by Vehicle ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/vehicle/1/expired",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "vehicle", "1", "expired"]
+            },
+            "description": "Get all expired documents for a specific vehicle."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Valid Documents by Vehicle ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/vehicle/1/valid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "vehicle", "1", "valid"]
+            },
+            "description": "Get all valid (non-expired) documents for a specific vehicle."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Documents Expiring Soon",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/expiring-soon?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "expiring-soon"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30",
+                  "description": "Number of days ahead to check for expiry (default: 30)"
+                }
+              ]
+            },
+            "description": "Get all documents expiring within the specified number of days."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Document",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": 1,\n  \"documentTypeId\": 1,\n  \"referenceNumber\": \"INS-2024-001234\",\n  \"startDate\": \"2024-01-01T00:00:00\",\n  \"endDate\": \"2025-01-01T00:00:00\",\n  \"imageUrl\": \"https://storage.example.com/documents/insurance_2024_001234.pdf\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Create a new document for a vehicle. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": 1,\n  \"documentTypeId\": 1,\n  \"referenceNumber\": \"INS-2024-001234\",\n  \"startDate\": \"2024-01-01T00:00:00\",\n  \"endDate\": \"2026-01-01T00:00:00\",\n  \"imageUrl\": \"https://storage.example.com/documents/insurance_2025_001234.pdf\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "1"]
+            },
+            "description": "Update a document by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "1"]
+            },
+            "description": "Delete a document by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Readers",
+      "description": "RFID reader management endpoints.",
+      "item": [
+        {
+          "name": "Get All Readers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/readers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers"]
+            },
+            "description": "Get all RFID readers."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reader by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/readers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers", "1"]
+            },
+            "description": "Get an RFID reader by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reader by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/readers/name/Gate-A-Reader",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers", "name", "Gate-A-Reader"]
+            },
+            "description": "Get an RFID reader by its name."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reader by IP Address",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/readers/ip/192.168.1.100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers", "ip", "192.168.1.100"]
+            },
+            "description": "Get an RFID reader by its IP address."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reader",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gate-A-Reader\",\n  \"location\": \"Main Entrance Gate A\",\n  \"ipAddress\": \"192.168.1.100\",\n  \"serialNumber\": \"RDR-2024-00001\",\n  \"model\": \"Impinj R420\",\n  \"isActive\": true,\n  \"scanCenterId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/readers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers"]
+            },
+            "description": "Create a new RFID reader. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reader",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gate-A-Reader\",\n  \"location\": \"Main Entrance Gate A - Updated\",\n  \"ipAddress\": \"192.168.1.101\",\n  \"serialNumber\": \"RDR-2024-00001\",\n  \"model\": \"Impinj R420\",\n  \"isActive\": true,\n  \"scanCenterId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/readers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers", "1"]
+            },
+            "description": "Update an RFID reader by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Reader",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/readers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "readers", "1"]
+            },
+            "description": "Delete an RFID reader by ID. Requires SUPERADMIN or ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

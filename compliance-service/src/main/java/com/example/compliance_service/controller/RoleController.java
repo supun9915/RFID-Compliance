@@ -68,12 +68,42 @@ public class RoleController {
 
     /**
      * Delete role (SuperAdmin only)
-     * DELETE /api/roles/{id}
+     * PATCH /api/roles/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<?> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return ResponseEntity.ok(ApiResponse.success("Role deleted successfully", null));
+    }
+
+    /**
+     * Soft delete role (SuperAdmin only)
+     * PATCH /api/roles/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public ResponseEntity<?> softDeleteRole(@PathVariable Long id) {
+        roleService.softDeleteRole(id);
+        return ResponseEntity.ok(ApiResponse.success("Role soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage role active/inactive status (SuperAdmin only)
+     * PATCH /api/roles/{id}/status?active=true  → activate
+     * PATCH /api/roles/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public ResponseEntity<?> manageRoleStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            RoleResponse role = roleService.activateRole(id);
+            return ResponseEntity.ok(ApiResponse.success("Role activated successfully", role));
+        } else {
+            RoleResponse role = roleService.deactivateRole(id);
+            return ResponseEntity.ok(ApiResponse.success("Role deactivated successfully", role));
+        }
     }
 }

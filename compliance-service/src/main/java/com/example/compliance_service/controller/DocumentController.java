@@ -118,12 +118,42 @@ public class DocumentController {
 
     /**
      * Delete document (Admin only)
-     * DELETE /api/documents/{id}
+     * PATCH /api/documents/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocument(id);
         return ResponseEntity.ok(ApiResponse.success("Document deleted successfully", null));
+    }
+
+    /**
+     * Soft delete document (Admin only)
+     * PATCH /api/documents/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteDocument(@PathVariable Long id) {
+        documentService.softDeleteDocument(id);
+        return ResponseEntity.ok(ApiResponse.success("Document soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage document active/inactive status (Admin only)
+     * PATCH /api/documents/{id}/status?active=true  → activate
+     * PATCH /api/documents/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageDocumentStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            DocumentResponse document = documentService.activateDocument(id);
+            return ResponseEntity.ok(ApiResponse.success("Document activated successfully", document));
+        } else {
+            DocumentResponse document = documentService.deactivateDocument(id);
+            return ResponseEntity.ok(ApiResponse.success("Document deactivated successfully", document));
+        }
     }
 }

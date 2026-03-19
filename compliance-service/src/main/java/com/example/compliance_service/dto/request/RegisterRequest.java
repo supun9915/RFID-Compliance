@@ -30,5 +30,8 @@ public class RegisterRequest {
     private String lastName;
     private String contactNumber;
     private String nic;
+    private String district;
+    private String province;
     private Long roleId;
+    private Long scanCenterId;
 }

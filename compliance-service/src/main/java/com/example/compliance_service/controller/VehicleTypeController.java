@@ -68,12 +68,42 @@ public class VehicleTypeController {
 
     /**
      * Delete vehicle type (Admin only)
-     * DELETE /api/vehicle-types/{id}
+     * PATCH /api/vehicle-types/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicleType(@PathVariable Long id) {
         vehicleTypeService.deleteVehicleType(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle type deleted successfully", null));
+    }
+
+    /**
+     * Soft delete vehicle type (Admin only)
+     * PATCH /api/vehicle-types/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteVehicleType(@PathVariable Long id) {
+        vehicleTypeService.softDeleteVehicleType(id);
+        return ResponseEntity.ok(ApiResponse.success("Vehicle type soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage vehicle type active/inactive status (Admin only)
+     * PATCH /api/vehicle-types/{id}/status?active=true  → activate
+     * PATCH /api/vehicle-types/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageVehicleTypeStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            VehicleTypeResponse vehicleType = vehicleTypeService.activateVehicleType(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle type activated successfully", vehicleType));
+        } else {
+            VehicleTypeResponse vehicleType = vehicleTypeService.deactivateVehicleType(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle type deactivated successfully", vehicleType));
+        }
     }
 }

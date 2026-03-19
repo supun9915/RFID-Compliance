@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,11 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
         DocumentType documentType = DocumentType.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .duration(request.getDuration())
+                .active(true)
+                .deleted(false)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         DocumentType savedDocumentType = documentTypeRepository.save(documentType);
@@ -53,6 +59,8 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
 
         documentType.setName(request.getName());
         documentType.setDescription(request.getDescription());
+        documentType.setDuration(request.getDuration());
+        documentType.setUpdatedAt(OffsetDateTime.now());
 
         DocumentType updatedDocumentType = documentTypeRepository.save(documentType);
         return mapToResponse(updatedDocumentType);
@@ -67,11 +75,45 @@ public class DocumentTypeServiceImpl implements IDocumentTypeService {
         documentTypeRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public DocumentTypeResponse activateDocumentType(Long id) {
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + id));
+        documentType.setActive(true);
+        documentType.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentTypeRepository.save(documentType));
+    }
+
+    @Override
+    @Transactional
+    public DocumentTypeResponse deactivateDocumentType(Long id) {
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + id));
+        documentType.setActive(false);
+        documentType.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentTypeRepository.save(documentType));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteDocumentType(Long id) {
+        DocumentType documentType = documentTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + id));
+        documentType.setActive(false);
+        documentType.setDeleted(true);
+        documentType.setUpdatedAt(OffsetDateTime.now());
+        documentTypeRepository.save(documentType);
+    }
+
     private DocumentTypeResponse mapToResponse(DocumentType documentType) {
         return DocumentTypeResponse.builder()
                 .id(documentType.getId())
                 .name(documentType.getName())
                 .description(documentType.getDescription())
+                .duration(documentType.getDuration())
+                .active(documentType.getActive())
+                .deleted(documentType.getDeleted())
                 .build();
     }
 }

@@ -5,19 +5,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AntennaResponse {
+public class VehicleMakeResponse {
 
     private Long id;
-    private Long readerId;
-    private String readerName;
-    private Integer antennaPort;
     private String name;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String description;
+    private Boolean active;
+    private Boolean deleted;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

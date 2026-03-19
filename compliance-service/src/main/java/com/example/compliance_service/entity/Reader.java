@@ -1,13 +1,14 @@
 package com.example.compliance_service.entity;
 
+import com.example.compliance_service.entity.ScanCenter;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "reader")
+@Table(name = "fix_reader")
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,13 +27,29 @@ public class Reader {
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
+    @Column(name = "serial_number", length = 100)
+    private String serialNumber;
+
+    @Column(length = 100)
+    private String model;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scan_center_id")
+    private ScanCenter scanCenter;
+
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
-    @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL)
-    private List<Antenna> antennas;
 
 }

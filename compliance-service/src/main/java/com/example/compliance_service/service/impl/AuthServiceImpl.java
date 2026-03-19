@@ -11,6 +11,7 @@ import com.example.compliance_service.repository.RoleRepository;
 import com.example.compliance_service.repository.UserRepository;
 import com.example.compliance_service.security.JwtTokenProvider;
 import com.example.compliance_service.service.IAuthService;
+import com.example.compliance_service.service.ITokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements IAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final ITokenBlacklistService tokenBlacklistService;
 
     @Override
     @Transactional
@@ -95,9 +97,25 @@ public class AuthServiceImpl implements IAuthService {
                 .token(token)
                 .type("Bearer")
                 .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().getName())
                 .build();
+    }
+
+    @Override
+    public String logout(String token) {
+        // Extract the actual token from "Bearer <token>"
+        String jwtToken = token;
+        if (token != null && token.startsWith("Bearer ")) {
+            jwtToken = token.substring(7);
+        }
+
+        // Add token to blacklist
+        tokenBlacklistService.blacklistToken(jwtToken);
+
+        return "User logged out successfully";
     }
 }

@@ -1,6 +1,6 @@
 package com.example.compliance_service.controller;
 
-import com.example.compliance_service.dto.request.ReaderRequest;
+import com.example.compliance_service.dto.request.ReadersRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.ReaderResponse;
 import com.example.compliance_service.service.IReaderService;
@@ -31,69 +31,87 @@ public class ReaderController {
     }
 
     /**
-     * Get reader by ID
-     * GET /api/readers/{id}
+     * Manage reader active/inactive status (Admin only)
+     * PATCH /api/readers/{id}/status?active=true  → activate
+     * PATCH /api/readers/{id}/status?active=false → deactivate
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getReaderById(@PathVariable Long id) {
-        ReaderResponse reader = readerService.getReaderById(id);
-        return ResponseEntity.ok(ApiResponse.success("Reader retrieved successfully", reader));
-    }
-
-    /**
-     * Get reader by name
-     * GET /api/readers/name/{name}
-     */
-    @GetMapping("/name/{name}")
-    public ResponseEntity<?> getReaderByName(@PathVariable String name) {
-        ReaderResponse reader = readerService.getReaderByName(name);
-        return ResponseEntity.ok(ApiResponse.success("Reader retrieved successfully", reader));
-    }
-
-    /**
-     * Get reader by IP address
-     * GET /api/readers/ip/{ipAddress}
-     */
-    @GetMapping("/ip/{ipAddress}")
-    public ResponseEntity<?> getReaderByIpAddress(@PathVariable String ipAddress) {
-        ReaderResponse reader = readerService.getReaderByIpAddress(ipAddress);
-        return ResponseEntity.ok(ApiResponse.success("Reader retrieved successfully", reader));
-    }
-
-    /**
-     * Create a new reader (Admin only)
-     * POST /api/readers
-     */
-    @PostMapping
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<?> createReader(@Valid @RequestBody ReaderRequest request) {
-        ReaderResponse reader = readerService.createReader(request);
+    public ResponseEntity<?> manageReaderStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            ReaderResponse reader = readerService.activateReader(id);
+            return ResponseEntity.ok(ApiResponse.success("Reader activated successfully", reader));
+        } else {
+            ReaderResponse reader = readerService.deactivateReader(id);
+            return ResponseEntity.ok(ApiResponse.success("Reader deactivated successfully", reader));
+        }
+    }
+
+    // ── Scan-center-scoped endpoints ───────────────────────────────────────────
+
+    /**
+     * Get all readers for a scan center
+     * GET /api/readers/scan-center/{scanCenterId}
+     */
+    @GetMapping("/scan-center/{scanCenterId}")
+    public ResponseEntity<?> getReadersByScanCenter(@PathVariable Long scanCenterId) {
+        List<ReaderResponse> readers = readerService.getReadersByScanCenter(scanCenterId);
+        return ResponseEntity.ok(ApiResponse.success("Readers retrieved successfully", readers));
+    }
+
+    /**
+     * Get a single reader by ID within a scan center
+     * GET /api/readers/scan-center/{scanCenterId}/{readerId}
+     */
+    @GetMapping("/scan-center/{scanCenterId}/{readerId}")
+    public ResponseEntity<?> getReaderByScanCenterAndId(
+            @PathVariable Long scanCenterId,
+            @PathVariable Long readerId) {
+        ReaderResponse reader = readerService.getReaderByScanCenterAndId(scanCenterId, readerId);
+        return ResponseEntity.ok(ApiResponse.success("Reader retrieved successfully", reader));
+    }
+
+    /**
+     * Create a reader for a specific scan center (Admin only)
+     * POST /api/readers/scan-center/{scanCenterId}
+     */
+    @PostMapping("/scan-center/{scanCenterId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> createReaderForScanCenter(
+            @PathVariable Long scanCenterId,
+            @Valid @RequestBody ReadersRequest request) {
+        ReaderResponse reader = readerService.createReaderForScanCenter(scanCenterId, request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Reader created successfully", reader));
     }
 
     /**
-     * Update reader (Admin only)
-     * PUT /api/readers/{id}
+     * Update a reader that belongs to a specific scan center (Admin only)
+     * PUT /api/readers/scan-center/{scanCenterId}/{readerId}
      */
-    @PutMapping("/{id}")
+    @PutMapping("/scan-center/{scanCenterId}/{readerId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<?> updateReader(
-            @PathVariable Long id,
-            @Valid @RequestBody ReaderRequest request) {
-        ReaderResponse reader = readerService.updateReader(id, request);
+    public ResponseEntity<?> updateReaderForScanCenter(
+            @PathVariable Long scanCenterId,
+            @PathVariable Long readerId,
+            @Valid @RequestBody ReadersRequest request) {
+        ReaderResponse reader = readerService.updateReaderForScanCenter(scanCenterId, readerId, request);
         return ResponseEntity.ok(ApiResponse.success("Reader updated successfully", reader));
     }
 
     /**
-     * Delete reader (Admin only)
-     * DELETE /api/readers/{id}
+     * Soft-delete a reader that belongs to a specific scan center (Admin only)
+     * DELETE /api/readers/scan-center/{scanCenterId}/{readerId}
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/scan-center/{scanCenterId}/{readerId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
-    public ResponseEntity<?> deleteReader(@PathVariable Long id) {
-        readerService.deleteReader(id);
+    public ResponseEntity<?> deleteReaderForScanCenter(
+            @PathVariable Long scanCenterId,
+            @PathVariable Long readerId) {
+        readerService.deleteReaderForScanCenter(scanCenterId, readerId);
         return ResponseEntity.ok(ApiResponse.success("Reader deleted successfully", null));
     }
 }

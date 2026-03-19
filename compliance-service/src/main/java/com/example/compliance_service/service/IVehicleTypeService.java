@@ -16,4 +16,10 @@ public interface IVehicleTypeService {
     VehicleTypeResponse updateVehicleType(Long id, VehicleTypeRequest request);
 
     void deleteVehicleType(Long id);
+
+    VehicleTypeResponse activateVehicleType(Long id);
+
+    VehicleTypeResponse deactivateVehicleType(Long id);
+
+    void softDeleteVehicleType(Long id);
 }

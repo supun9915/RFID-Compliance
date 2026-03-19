@@ -22,4 +22,10 @@ public interface IVehicleService {
     VehicleResponse updateVehicle(Long id, VehicleRequest request);
 
     void deleteVehicle(Long id);
+
+    VehicleResponse activateVehicle(Long id);
+
+    VehicleResponse deactivateVehicle(Long id);
+
+    void softDeleteVehicle(Long id);
 }

@@ -1,6 +1,6 @@
 package com.example.compliance_service.service;
 
-import com.example.compliance_service.dto.request.ReaderRequest;
+import com.example.compliance_service.dto.request.ReadersRequest;
 import com.example.compliance_service.dto.response.ReaderResponse;
 
 import java.util.List;
@@ -9,15 +9,24 @@ public interface IReaderService {
 
     List<ReaderResponse> getAllReaders();
 
-    ReaderResponse getReaderById(Long id);
+    ReaderResponse activateReader(Long id);
 
-    ReaderResponse getReaderByName(String name);
+    ReaderResponse deactivateReader(Long id);
 
-    ReaderResponse getReaderByIpAddress(String ipAddress);
+    // ── Scan-center-scoped operations ──────────────────────────────────────────
 
-    ReaderResponse createReader(ReaderRequest request);
+    /** List all readers that belong to the given scan center. */
+    List<ReaderResponse> getReadersByScanCenter(Long scanCenterId);
 
-    ReaderResponse updateReader(Long id, ReaderRequest request);
+    /** Get a single reader by its id, scoped to a scan center. */
+    ReaderResponse getReaderByScanCenterAndId(Long scanCenterId, Long readerId);
 
-    void deleteReader(Long id);
+    /** Create a reader and associate it with the given scan center. */
+    ReaderResponse createReaderForScanCenter(Long scanCenterId, ReadersRequest request);
+
+    /** Update a reader that belongs to the given scan center. */
+    ReaderResponse updateReaderForScanCenter(Long scanCenterId, Long readerId, ReadersRequest request);
+
+    /** Soft-delete a reader that belongs to the given scan center. */
+    void deleteReaderForScanCenter(Long scanCenterId, Long readerId);
 }

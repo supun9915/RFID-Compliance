@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,5 +15,10 @@ public class VehicleTypeResponse {
 
     private Long id;
     private String name;
+    private String description;
     private String zplCode;
+    private Boolean active;
+    private Boolean deleted;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

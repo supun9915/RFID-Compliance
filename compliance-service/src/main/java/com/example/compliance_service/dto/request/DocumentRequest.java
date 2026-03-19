@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -24,9 +25,9 @@ public class DocumentRequest {
     @Size(max = 100, message = "Reference number must be at most 100 characters")
     private String referenceNumber;
 
-    private LocalDateTime startDate;
+    private OffsetDateTime startDate;
 
-    private LocalDateTime endDate;
+    private OffsetDateTime endDate;
 
     @Size(max = 500, message = "Image URL must be at most 500 characters")
     private String imageUrl;

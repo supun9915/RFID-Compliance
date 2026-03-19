@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,10 @@ public class RoleServiceImpl implements IRoleService {
         Role role = Role.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .active(true)
+                .deleted(false)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         Role savedRole = roleRepository.save(role);
@@ -53,6 +58,7 @@ public class RoleServiceImpl implements IRoleService {
 
         role.setName(request.getName());
         role.setDescription(request.getDescription());
+        role.setUpdatedAt(OffsetDateTime.now());
 
         Role updatedRole = roleRepository.save(role);
         return mapToResponse(updatedRole);
@@ -67,11 +73,46 @@ public class RoleServiceImpl implements IRoleService {
         roleRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public RoleResponse activateRole(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
+        role.setActive(true);
+        role.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(roleRepository.save(role));
+    }
+
+    @Override
+    @Transactional
+    public RoleResponse deactivateRole(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
+        role.setActive(false);
+        role.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(roleRepository.save(role));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteRole(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
+        role.setActive(false);
+        role.setDeleted(true);
+        role.setUpdatedAt(OffsetDateTime.now());
+        roleRepository.save(role);
+    }
+
     private RoleResponse mapToResponse(Role role) {
         return RoleResponse.builder()
                 .id(role.getId())
                 .name(role.getName())
                 .description(role.getDescription())
+                .active(role.getActive())
+                .deleted(role.getDeleted())
+                .createdAt(role.getCreatedAt())
+                .updatedAt(role.getUpdatedAt())
                 .build();
     }
 }

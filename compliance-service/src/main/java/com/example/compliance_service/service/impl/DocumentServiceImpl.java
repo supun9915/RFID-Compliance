@@ -7,6 +7,7 @@ import com.example.compliance_service.entity.Document;
 import com.example.compliance_service.entity.DocumentType;
 import com.example.compliance_service.entity.Vehicle;
 import com.example.compliance_service.exception.ResourceNotFoundException;
+import com.example.compliance_service.exception.UserAlreadyExistsException;
 import com.example.compliance_service.repository.DocumentRepository;
 import com.example.compliance_service.repository.DocumentTypeRepository;
 import com.example.compliance_service.repository.VehicleRepository;
@@ -15,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,22 +58,22 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public List<DocumentResponse> getExpiredDocumentsByVehicleId(Long vehicleId) {
-        return documentRepository.findExpiredDocuments(vehicleId, LocalDateTime.now()).stream()
+        return documentRepository.findExpiredDocuments(vehicleId, OffsetDateTime.now()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DocumentResponse> getValidDocumentsByVehicleId(Long vehicleId) {
-        return documentRepository.findValidDocuments(vehicleId, LocalDateTime.now()).stream()
+        return documentRepository.findValidDocuments(vehicleId, OffsetDateTime.now()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DocumentResponse> getDocumentsExpiringSoon(int days) {
-        LocalDateTime startDate = LocalDateTime.now();
-        LocalDateTime endDate = startDate.plusDays(days);
+        OffsetDateTime startDate = OffsetDateTime.now();
+        OffsetDateTime endDate = startDate.plusDays(days);
         return documentRepository.findDocumentsExpiringSoon(startDate, endDate).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -87,6 +88,17 @@ public class DocumentServiceImpl implements IDocumentService {
         DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Document type not found with id: " + request.getDocumentTypeId()));
 
+        // Check document type uniqueness for the same vehicle
+        if (documentRepository.existsByVehicleIdAndDocumentTypeId(request.getVehicleId(), request.getDocumentTypeId())) {
+            throw new UserAlreadyExistsException("Document of this type already exists for the vehicle");
+        }
+
+        // Create 10-digit random reference number if not provided
+        if (request.getReferenceNumber() == null || request.getReferenceNumber().isEmpty()) {
+            request.setReferenceNumber(String.valueOf((long) (Math.random() * 1_000_000_0000L)));
+        }
+
+
         Document document = Document.builder()
                 .vehicle(vehicle)
                 .documentType(documentType)
@@ -94,8 +106,10 @@ public class DocumentServiceImpl implements IDocumentService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .imageUrl(request.getImageUrl())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .active(true)
+                .deleted(false)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         Document savedDocument = documentRepository.save(document);
@@ -120,7 +134,7 @@ public class DocumentServiceImpl implements IDocumentService {
         document.setStartDate(request.getStartDate());
         document.setEndDate(request.getEndDate());
         document.setImageUrl(request.getImageUrl());
-        document.setUpdatedAt(LocalDateTime.now());
+        document.setUpdatedAt(OffsetDateTime.now());
 
         Document updatedDocument = documentRepository.save(document);
         return mapToResponse(updatedDocument);
@@ -135,6 +149,37 @@ public class DocumentServiceImpl implements IDocumentService {
         documentRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public DocumentResponse activateDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(true);
+        document.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentRepository.save(document));
+    }
+
+    @Override
+    @Transactional
+    public DocumentResponse deactivateDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(false);
+        document.setUpdatedAt(OffsetDateTime.now());
+        return mapToResponse(documentRepository.save(document));
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + id));
+        document.setActive(false);
+        document.setDeleted(true);
+        document.setUpdatedAt(OffsetDateTime.now());
+        documentRepository.save(document);
+    }
+
     private DocumentResponse mapToResponse(Document document) {
         DocumentTypeResponse documentTypeResponse = null;
         if (document.getDocumentType() != null) {
@@ -142,6 +187,8 @@ public class DocumentServiceImpl implements IDocumentService {
                     .id(document.getDocumentType().getId())
                     .name(document.getDocumentType().getName())
                     .description(document.getDocumentType().getDescription())
+                    .active(document.getDocumentType().getActive())
+                    .deleted(document.getDocumentType().getDeleted())
                     .build();
         }
 
@@ -154,6 +201,8 @@ public class DocumentServiceImpl implements IDocumentService {
                 .startDate(document.getStartDate())
                 .endDate(document.getEndDate())
                 .imageUrl(document.getImageUrl())
+                .active(document.getActive())
+                .deleted(document.getDeleted())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
                 .build();

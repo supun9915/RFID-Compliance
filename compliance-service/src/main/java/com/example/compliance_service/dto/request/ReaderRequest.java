@@ -21,4 +21,14 @@ public class ReaderRequest {
 
     @Size(max = 45, message = "IP address must be at most 45 characters")
     private String ipAddress;
+
+    @Size(max = 100, message = "Serial number must be at most 100 characters")
+    private String serialNumber;
+
+    @Size(max = 100, message = "Model must be at most 100 characters")
+    private String model;
+
+    private Boolean isActive = true;
+
+    private Long scanCenterId;
 }

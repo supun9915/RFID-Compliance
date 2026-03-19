@@ -75,7 +75,7 @@ public class VehicleController {
      * POST /api/vehicles
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> createVehicle(@Valid @RequestBody VehicleRequest request) {
         VehicleResponse vehicle = vehicleService.createVehicle(request);
         return ResponseEntity
@@ -88,7 +88,7 @@ public class VehicleController {
      * PUT /api/vehicles/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest request) {
@@ -98,12 +98,42 @@ public class VehicleController {
 
     /**
      * Delete vehicle (Admin only)
-     * DELETE /api/vehicles/{id}
+     * PATCH /api/vehicles/{id}/delete
      */
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/delete")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
         vehicleService.deleteVehicle(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle deleted successfully", null));
+    }
+
+    /**
+     * Soft delete vehicle (Admin only)
+     * PATCH /api/vehicles/{id}
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> softDeleteVehicle(@PathVariable Long id) {
+        vehicleService.softDeleteVehicle(id);
+        return ResponseEntity.ok(ApiResponse.success("Vehicle soft-deleted successfully", null));
+    }
+
+    /**
+     * Manage vehicle active/inactive status (Admin only)
+     * PATCH /api/vehicles/{id}/status?active=true  → activate
+     * PATCH /api/vehicles/{id}/status?active=false → deactivate
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> manageVehicleStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        if (active) {
+            VehicleResponse vehicle = vehicleService.activateVehicle(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle activated successfully", vehicle));
+        } else {
+            VehicleResponse vehicle = vehicleService.deactivateVehicle(id);
+            return ResponseEntity.ok(ApiResponse.success("Vehicle deactivated successfully", vehicle));
+        }
     }
 }
