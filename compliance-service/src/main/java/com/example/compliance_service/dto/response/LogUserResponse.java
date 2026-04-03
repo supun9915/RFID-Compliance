@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-
-    private String token;
-    private String type = "Bearer";
+public class LogUserResponse {
     private Long id;
     private String firstName;
     private String lastName;
@@ -20,4 +17,5 @@ public class AuthResponse {
     private String email;
     private RoleResponse role;
     private ScanCenterResponse scanCenter;
+
 }

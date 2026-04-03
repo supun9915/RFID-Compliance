@@ -17,6 +17,7 @@ import { Login } from "./pages/Login";
 import { isAuthenticated } from "./api/authApi";
 import { ApiResponsePopup } from "./components/Shared/ApiResponsePopup";
 import { subscribeToResponseNotifications } from "./utils/responseNotifier";
+import { canView, PAGES, getUserRole } from "./components/Data/Permissions";
 
 export function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
@@ -47,46 +48,52 @@ export function App() {
   };
 
   const renderPage = () => {
+    const role = getUserRole();
+    const guard = (page, element) =>
+      canView(role, page) ? element : <Dashboard />;
+
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />;
+        return guard(PAGES.DASHBOARD, <Dashboard />);
       case "owners":
-        return (
+        return guard(
+          PAGES.OWNERS,
           <Owners
             onViewVehicles={(owner) => {
               setActiveOwner(owner);
               setCurrentPage("ownerVehicles");
             }}
-          />
+          />,
         );
       case "ownerVehicles":
-        return (
+        return guard(
+          PAGES.OWNERS,
           <OwnerVehiclesPage
             owner={activeOwner}
             onBack={() => {
               setCurrentPage("owners");
               setActiveOwner(null);
             }}
-          />
+          />,
         );
       case "documents":
-        return <DocumentTypes />;
+        return guard(PAGES.DOCUMENT_TYPE, <DocumentTypes />);
       case "vehicles":
-        return <VehicleTypes />;
+        return guard(PAGES.VEHICLE_TYPES, <VehicleTypes />);
       case "vehicleMakes":
-        return <VehicleMakes />;
+        return guard(PAGES.VEHICLE_MAKES, <VehicleMakes />);
       case "vehicleModels":
-        return <VehicleModels />;
+        return guard(PAGES.VEHICLE_MODELS, <VehicleModels />);
       case "scanCenters":
-        return <ScanCenters />;
+        return guard(PAGES.SCAN_CENTER, <ScanCenters />);
       case "admins":
-        return <AdminUsers />;
+        return guard(PAGES.ADMIN_USERS, <AdminUsers />);
       case "detections":
-        return <DetectionHistory />;
+        return guard(PAGES.DETECTION_HISTORY, <DetectionHistory />);
       case "settings":
         return <Settings />;
       case "account":
-        return <Account />;
+        return guard(PAGES.ACCOUNT, <Account />);
       default:
         return <Dashboard />;
     }

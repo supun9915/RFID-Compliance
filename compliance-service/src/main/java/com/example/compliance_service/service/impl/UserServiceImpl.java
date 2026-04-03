@@ -210,10 +210,44 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserResponse getUserByUsername(String username) {
+    public LogUserResponse getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-        return mapToUserResponse(user);
+
+        RoleResponse roleResponse = user.getRole() != null
+                ? RoleResponse.builder()
+                        .id(user.getRole().getId())
+                        .name(user.getRole().getName())
+                        .description(user.getRole().getDescription())
+                        .active(user.getRole().getActive())
+                        .deleted(user.getRole().getDeleted())
+                        .build()
+                : null;
+
+        ScanCenterResponse scanCenterResponse = null;
+        if (user.getScanCenter() != null) {
+            scanCenterResponse = ScanCenterResponse.builder()
+                    .id(user.getScanCenter().getId())
+                    .name(user.getScanCenter().getName())
+                    .city(user.getScanCenter().getCity())
+                    .district(user.getScanCenter().getDistrict())
+                    .province(user.getScanCenter().getProvince())
+                    .isActive(user.getScanCenter().getIsActive())
+                    .deleted(user.getScanCenter().getDeleted())
+                    .createdAt(user.getScanCenter().getCreatedAt())
+                    .updatedAt(user.getScanCenter().getUpdatedAt())
+                    .build();
+        }
+
+        return LogUserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(roleResponse)
+                .scanCenter(scanCenterResponse)
+                .build();
     }
 
     @Override

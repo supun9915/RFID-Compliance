@@ -3,6 +3,8 @@ package com.example.compliance_service.service.impl;
 import com.example.compliance_service.dto.request.LoginRequest;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.response.AuthResponse;
+import com.example.compliance_service.dto.response.RoleResponse;
+import com.example.compliance_service.dto.response.ScanCenterResponse;
 import com.example.compliance_service.entity.Role;
 import com.example.compliance_service.entity.User;
 import com.example.compliance_service.exception.ResourceNotFoundException;
@@ -71,13 +73,24 @@ public class AuthServiceImpl implements IAuthService {
         // Generate token
         String token = jwtTokenProvider.generateTokenFromUsername(savedUser.getUsername());
 
+        RoleResponse roleResponse = new RoleResponse();
+        roleResponse.setId(role.getId());
+        roleResponse.setName(role.getName());
+        roleResponse.setDescription(role.getDescription());
+        roleResponse.setActive(role.getActive());
+        roleResponse.setDeleted(role.getDeleted());
+        roleResponse.setCreatedAt(role.getCreatedAt());
+        roleResponse.setUpdatedAt(role.getUpdatedAt());
+
+
         return AuthResponse.builder()
                 .token(token)
                 .type("Bearer")
                 .id(savedUser.getId())
                 .username(savedUser.getUsername())
                 .email(savedUser.getEmail())
-                .role(savedUser.getRole().getName())
+                .role(roleResponse)
+                .scanCenter(null)
                 .build();
     }
 
@@ -93,6 +106,35 @@ public class AuthServiceImpl implements IAuthService {
         String token = jwtTokenProvider.generateToken(authentication);
         User user = (User) authentication.getPrincipal();
 
+        RoleResponse roleResponse = new RoleResponse();
+        if (user.getRole() != null) {
+            roleResponse.setId(user.getRole().getId());
+            roleResponse.setName(user.getRole().getName());
+            roleResponse.setDescription(user.getRole().getDescription());
+            roleResponse.setActive(user.getRole().getActive());
+            roleResponse.setDeleted(user.getRole().getDeleted());
+            roleResponse.setCreatedAt(user.getRole().getCreatedAt());
+            roleResponse.setUpdatedAt(user.getRole().getUpdatedAt());
+
+        } else {
+            roleResponse = null;
+        }
+
+        ScanCenterResponse scanCenterResponse = new ScanCenterResponse();
+        if (user.getScanCenter() != null) {
+            scanCenterResponse.setId(user.getScanCenter().getId());
+            scanCenterResponse.setName(user.getScanCenter().getName());
+            scanCenterResponse.setLocation(user.getScanCenter().getLocation());
+            scanCenterResponse.setIsActive(user.getScanCenter().getIsActive());
+            scanCenterResponse.setDeleted(user.getScanCenter().getDeleted());
+            scanCenterResponse.setCreatedAt(user.getScanCenter().getCreatedAt());
+            scanCenterResponse.setUpdatedAt(user.getScanCenter().getUpdatedAt());
+
+        } else {
+            scanCenterResponse = null;
+        }
+
+
         return AuthResponse.builder()
                 .token(token)
                 .type("Bearer")
@@ -101,7 +143,8 @@ public class AuthServiceImpl implements IAuthService {
                 .lastName(user.getLastName())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole().getName())
+                .role(roleResponse)
+                .scanCenter(scanCenterResponse)
                 .build();
     }
 

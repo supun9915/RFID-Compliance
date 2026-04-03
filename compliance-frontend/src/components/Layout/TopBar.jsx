@@ -94,7 +94,7 @@ export function TopBar({ onLogout, onNavigate }) {
                 className="fixed inset-0 z-20"
                 onClick={() => setShowProfile(false)}
               />
-              <div className="absolute right-12 top-12 z-30 w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="absolute right-12 top-12 z-[1000] w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
                 {/* Header */}
                 <div className="bg-gray-900 px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">

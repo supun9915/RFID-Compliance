@@ -11,6 +11,7 @@ import { getVehicleMakes } from "../api/vehicleMakesApi";
 import { X } from "lucide-react";
 import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../utils/responseNotifier";
+import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
 
 export function VehicleModels() {
   const [vehicleModels, setVehicleModels] = useState([]);
@@ -231,16 +232,20 @@ export function VehicleModels() {
     );
   }
 
+  const userCanManage = canManage(getUserRole(), PAGES.VEHICLE_MODELS);
+
   return (
     <>
       <DataTable
         title="Vehicle Models"
         columns={columns}
         data={vehicleModels}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
+        onAdd={userCanManage ? handleAdd : undefined}
+        onEdit={userCanManage ? handleEdit : undefined}
+        onDelete={userCanManage ? handleDelete : undefined}
+        onToggleStatus={userCanManage ? handleToggleStatus : undefined}
+        showAddButton={userCanManage}
+        showActions={userCanManage}
       />
 
       {showModal && (

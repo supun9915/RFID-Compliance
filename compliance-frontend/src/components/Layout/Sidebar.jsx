@@ -4,74 +4,88 @@ import {
   Users,
   FileText,
   Car,
-  BoomBox,
   ShieldCheck,
-  LogOut,
-  Settings,
   Factory,
   Layers,
   Radar,
   Activity,
   UserCircle,
 } from "lucide-react";
+import { canView, PAGES, getUserRole } from "../Data/Permissions";
+
 export function Sidebar({ activePage, onNavigate }) {
+  const userRole = getUserRole();
+
   const navItems = [
     {
       id: "dashboard",
       icon: LayoutDashboard,
       label: "Dashboard",
+      page: PAGES.DASHBOARD,
     },
     {
       id: "documents",
       icon: FileText,
       label: "Document Type",
+      page: PAGES.DOCUMENT_TYPE,
     },
     {
       id: "vehicles",
       icon: Car,
       label: "Vehicle Type",
+      page: PAGES.VEHICLE_TYPES,
     },
     {
       id: "scanCenters",
       icon: Radar,
       label: "Scan Centers",
+      page: PAGES.SCAN_CENTER,
     },
     {
       id: "detections",
       icon: Activity,
       label: "Detection History",
+      page: PAGES.DETECTION_HISTORY,
     },
     {
       id: "owners",
       icon: Users,
       label: "Owners",
+      page: PAGES.OWNERS,
     },
     {
       id: "admins",
       icon: ShieldCheck,
       label: "Admin Users",
+      page: PAGES.ADMIN_USERS,
     },
     {
       id: "vehicleMakes",
       icon: Factory,
       label: "Vehicle Makes",
+      page: PAGES.VEHICLE_MAKES,
     },
     {
       id: "vehicleModels",
       icon: Layers,
       label: "Vehicle Models",
+      page: PAGES.VEHICLE_MODELS,
     },
-  ];
+  ].filter((item) => canView(userRole, item.page));
 
   return (
     <aside className="w-64 bg-gray-900 text-white flex flex-col h-screen fixed left-0 top-0 border-r border-gray-800 z-20">
       {/* Logo Area */}
       <div className="h-16 flex items-center px-6 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
+          <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center overflow-hidden">
+            <img
+              src="/Logo65.png"
+              alt="Logo"
+              className="w-full p-0.5 h-full object-contain"
+            />
           </div>
-          <span className="font-bold text-lg tracking-tight">V-Comply</span>
+          <span className="font-bold text-lg tracking-tight">AutoComply</span>
         </div>
       </div>
 

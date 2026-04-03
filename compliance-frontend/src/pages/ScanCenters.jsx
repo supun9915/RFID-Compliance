@@ -14,6 +14,7 @@ import {
 import { X, Plus, Edit2, Cpu, Trash2 } from "lucide-react";
 import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../utils/responseNotifier";
+import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
 
 export function ScanCenters() {
   const [scanCenters, setScanCenters] = useState([]);
@@ -460,17 +461,20 @@ export function ScanCenters() {
     );
   }
 
+  const userCanManage = canManage(getUserRole(), PAGES.SCAN_CENTER);
+
   return (
     <>
       <DataTable
         title="Scan Centers"
         columns={columns}
         data={scanCenters}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
+        onAdd={userCanManage ? handleAdd : undefined}
+        onEdit={userCanManage ? handleEdit : undefined}
+        onDelete={userCanManage ? handleDelete : undefined}
+        onToggleStatus={userCanManage ? handleToggleStatus : undefined}
         onManageReaders={handleManageReaders}
+        showAddButton={userCanManage}
       />
 
       {showModal && (
@@ -623,13 +627,15 @@ export function ScanCenters() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handleAddReader}
-                  className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Reader
-                </button>
+                {userCanManage && (
+                  <button
+                    onClick={handleAddReader}
+                    className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Reader
+                  </button>
+                )}
                 <button
                   onClick={() => setShowReadersModal(false)}
                   className="text-gray-400 hover:text-gray-600 ml-2"
@@ -713,20 +719,24 @@ export function ScanCenters() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button
-                              className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                              title="Edit Reader"
-                              onClick={() => handleEditReader(reader)}
-                            >
-                              <Edit2 className="w-4 h-4 text-blue-600" />
-                            </button>
-                            <button
-                              className="p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                              title="Delete Reader"
-                              onClick={() => handleDeleteReader(reader)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </button>
+                            {userCanManage && (
+                              <button
+                                className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                                title="Edit Reader"
+                                onClick={() => handleEditReader(reader)}
+                              >
+                                <Edit2 className="w-4 h-4 text-blue-600" />
+                              </button>
+                            )}
+                            {userCanManage && (
+                              <button
+                                className="p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                title="Delete Reader"
+                                onClick={() => handleDeleteReader(reader)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

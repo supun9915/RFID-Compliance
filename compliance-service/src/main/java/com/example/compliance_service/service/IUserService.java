@@ -3,10 +3,7 @@ package com.example.compliance_service.service;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
-import com.example.compliance_service.dto.response.OwnerUserResponse;
-import com.example.compliance_service.dto.response.UserResponse;
-import com.example.compliance_service.dto.response.VehicleDocumentResponse;
-import com.example.compliance_service.dto.response.VehicleUserResponse;
+import com.example.compliance_service.dto.response.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -36,7 +33,7 @@ public interface IUserService {
      * @param username Username
      * @return User details
      */
-    UserResponse getUserByUsername(String username);
+    LogUserResponse getUserByUsername(String username);
 
     /**
      * Create a new user

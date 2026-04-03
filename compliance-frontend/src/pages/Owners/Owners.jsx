@@ -4,6 +4,11 @@ import { ApiResponsePopup } from "../../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../../utils/responseNotifier";
 import { OwnerFormModal } from "./model/OwnerFormModal";
 import {
+  canManage,
+  PAGES,
+  getUserRole,
+} from "../../components/Data/Permissions";
+import {
   createUser,
   updateUser,
   getUsersByRole,
@@ -237,10 +242,22 @@ export function Owners({ onViewVehicles }) {
           title="Vehicle Owners"
           columns={columns}
           data={tableData}
-          onAdd={openCreateModal}
-          onEdit={openEditModal}
-          onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
+          onAdd={
+            canManage(getUserRole(), PAGES.OWNERS) ? openCreateModal : undefined
+          }
+          onEdit={
+            canManage(getUserRole(), PAGES.OWNERS) ? openEditModal : undefined
+          }
+          onDelete={
+            canManage(getUserRole(), PAGES.OWNERS) ? handleDelete : undefined
+          }
+          onToggleStatus={
+            canManage(getUserRole(), PAGES.OWNERS)
+              ? handleToggleStatus
+              : undefined
+          }
+          showAddButton={canManage(getUserRole(), PAGES.OWNERS)}
+          showActions={canManage(getUserRole(), PAGES.OWNERS)}
           onVehicleDetails={(row) => onViewVehicles(row)}
         />
       )}

@@ -1,13 +1,9 @@
 package com.example.compliance_service.controller;
 
-import com.example.compliance_service.dto.response.VehicleDocumentResponse;
+import com.example.compliance_service.dto.response.*;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
-import com.example.compliance_service.dto.response.ApiResponse;
-import com.example.compliance_service.dto.response.OwnerUserResponse;
-import com.example.compliance_service.dto.response.UserResponse;
-import com.example.compliance_service.dto.response.VehicleUserResponse;
 import com.example.compliance_service.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -66,7 +62,7 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        UserResponse user = userService.getUserByUsername(username);
+        LogUserResponse user = userService.getUserByUsername(username);
         return ResponseEntity.ok(ApiResponse.success("User profile retrieved successfully", user));
     }
 

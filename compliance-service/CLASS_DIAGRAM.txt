@@ -1,0 +1,973 @@
+================================================================================
+  RFID-Based Intelligent Vehicle Compliance Monitoring and Notification System
+  CLASS DIAGRAM - Full Details
+  Generated: March 20, 2026
+================================================================================
+
+================================================================================
+  PACKAGE STRUCTURE
+================================================================================
+
+  com.example.compliance_service
+  ├── entity/           → JPA Entity classes (database models)
+  ├── dto/
+  │   ├── Enums/        → Enumerations
+  │   ├── request/      → Inbound request DTOs
+  │   └── response/     → Outbound response DTOs
+  ├── repository/       → Spring Data JPA repositories
+  ├── service/          → Service interfaces
+  │   └── impl/         → Service implementations
+  ├── controller/       → REST API controllers
+  ├── security/         → JWT & Spring Security
+  ├── config/           → Application configuration
+  └── exception/        → Custom exceptions
+
+
+================================================================================
+  SECTION 1: ENTITIES
+================================================================================
+
+--------------------------------------------------------------------------------
+  1.1  Location  (com.example.compliance_service.entity)
+  [NOT a JPA entity — used as embedded JSONB value inside ScanCenter]
+--------------------------------------------------------------------------------
+  FIELDS:
+    - latitude  : Double
+    - longitude : Double
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    → Used as JSONB column in ScanCenter.location
+
+
+--------------------------------------------------------------------------------
+  1.2  Role  (com.example.compliance_service.entity)
+  Table: role
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id          : Long              [PK, auto-increment]
+    - name        : String            [NOT NULL, UNIQUE, max 50]
+    - description : String
+    - active      : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted     : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - createdAt   : OffsetDateTime    (col: created_at)
+    - updatedAt   : OffsetDateTime    (col: updated_at)
+    - users       : List<User>        [@OneToMany, mappedBy="role"]
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    ONE Role ──────────────────────────── MANY User
+
+
+--------------------------------------------------------------------------------
+  1.3  ScanCenter  (com.example.compliance_service.entity)
+  Table: scan_center
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id        : Long              [PK, auto-increment]
+    - name      : String            [NOT NULL, max 100]
+    - location  : Location          [@JdbcTypeCode JSON / JSONB column]
+    - city      : String            [max 100]
+    - district  : String            [max 100]
+    - province  : String            [max 100]
+    - isActive  : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted   : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - createdAt : OffsetDateTime    (col: created_at)
+    - updatedAt : OffsetDateTime    (col: updated_at)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    ONE ScanCenter ─────────────────────── MANY User            (via users.scan_center_id)
+    ONE ScanCenter ─────────────────────── MANY Reader          (via fix_reader.scan_center_id)
+    ONE ScanCenter ─────────────────────── MANY DetectionHistory (via detection_history.scancenter_id)
+
+
+--------------------------------------------------------------------------------
+  1.4  User  (com.example.compliance_service.entity)
+  Table: users
+  Implements: UserDetails (Spring Security)
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id            : Long              [PK, auto-increment]
+    - username      : String            [NOT NULL, UNIQUE, max 100]
+    - email         : String            [NOT NULL, UNIQUE, max 100]
+    - password      : String            [NOT NULL]
+    - firstName     : String            [max 100]   (col: first_name)
+    - lastName      : String            [max 100]   (col: last_name)
+    - role          : Role              [@ManyToOne EAGER, FK: role_id]
+    - contactNumber : String            [max 20]    (col: contact_number)
+    - nic           : String            [max 20]
+    - district      : String            [max 100]
+    - province      : String            [max 100]
+    - scanCenter    : ScanCenter        [@ManyToOne LAZY, FK: scan_center_id]
+    - createdAt     : OffsetDateTime    (col: created_at)
+    - updatedAt     : OffsetDateTime    (col: updated_at)
+    - active        : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted       : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - vehicles      : List<Vehicle>     [@OneToMany, mappedBy="owner"]
+
+  METHODS (UserDetails overrides):
+    + getAuthorities() : Collection<? extends GrantedAuthority>
+      → returns [ROLE_{role.name}]
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY User ──────────────────────────── ONE Role
+    MANY User ──────────────────────────── ONE ScanCenter
+    ONE  User ──────────────────────────── MANY Vehicle        (as owner)
+    ONE  User ──────────────────────────── MANY DetectionHistory (as owner)
+
+
+--------------------------------------------------------------------------------
+  1.5  VehicleType  (com.example.compliance_service.entity)
+  Table: vehicle_type
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id          : Long              [PK, auto-increment]
+    - name        : String            [NOT NULL, UNIQUE, max 100]
+    - description : String            [TEXT]
+    - zplCode     : String            [TEXT]   (col: zpl_code)
+    - createdAt   : OffsetDateTime    (col: created_at)
+    - updatedAt   : OffsetDateTime    (col: updated_at)
+    - active      : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted     : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    ONE VehicleType ────────────────────── MANY Vehicle
+
+
+--------------------------------------------------------------------------------
+  1.6  VehicleMake  (com.example.compliance_service.entity)
+  Table: vehicle_make
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id          : Long              [PK, auto-increment]
+    - name        : String            [NOT NULL, UNIQUE, max 100]
+    - description : String            [TEXT]
+    - createdAt   : OffsetDateTime    (col: created_at)
+    - updatedAt   : OffsetDateTime    (col: updated_at)
+    - active      : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted     : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    ONE VehicleMake ────────────────────── MANY VehicleModel
+
+
+--------------------------------------------------------------------------------
+  1.7  VehicleModel  (com.example.compliance_service.entity)
+  Table: vehicle_model
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id          : Long              [PK, auto-increment]
+    - name        : String            [NOT NULL, max 100]
+    - make        : VehicleMake       [@ManyToOne EAGER, FK: make_id]
+    - description : String            [TEXT]
+    - createdAt   : OffsetDateTime    (col: created_at)
+    - updatedAt   : OffsetDateTime    (col: updated_at)
+    - active      : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted     : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY VehicleModel ──────────────────── ONE VehicleMake
+    ONE  VehicleModel ──────────────────── MANY Vehicle
+
+
+--------------------------------------------------------------------------------
+  1.8  Vehicle  (com.example.compliance_service.entity)
+  Table: vehicle
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id                 : Long              [PK, auto-increment]
+    - vehicleType        : VehicleType       [@ManyToOne EAGER, FK: vehicle_type_id]
+    - vehicleModel       : VehicleModel      [@ManyToOne EAGER, FK: vehicle_model_id]
+    - owner              : User              [@ManyToOne EAGER, FK: owner_id]
+    - registrationNumber : String            [NOT NULL, UNIQUE, max 100]  (col: registration_number)
+    - vehicleNumber      : String            [max 100]  (col: vehicle_number)
+    - chassisNumber      : String            [max 100]  (col: chassis_number)
+    - epc                : String            [NOT NULL, UNIQUE, max 100]
+    - registeredYear     : Integer           (col: registered_year)
+    - createdAt          : OffsetDateTime    (col: created_at)
+    - updatedAt          : OffsetDateTime    (col: updated_at)
+    - nextSerialNumber   : Long              (col: next_serial_number)
+    - active             : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted            : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - documents          : List<Document>    [@OneToMany, mappedBy="vehicle", cascade=ALL]
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY Vehicle ──────────────────────────── ONE VehicleType
+    MANY Vehicle ──────────────────────────── ONE VehicleModel
+    MANY Vehicle ──────────────────────────── ONE User          (owner)
+    ONE  Vehicle ──────────────────────────── MANY Document
+    ONE  Vehicle ──────────────────────────── MANY DetectionHistory
+
+
+--------------------------------------------------------------------------------
+  1.9  Reader  (com.example.compliance_service.entity)
+  Table: fix_reader
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id           : Long              [PK, auto-increment]
+    - name         : String            [NOT NULL, max 100]
+    - location     : String
+    - ipAddress    : String            [max 45]   (col: ip_address)
+    - serialNumber : String            [max 100]  (col: serial_number)
+    - model        : String            [max 100]
+    - isActive     : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted      : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - scanCenter   : ScanCenter        [@ManyToOne LAZY, FK: scan_center_id]
+    - createdAt    : OffsetDateTime    (col: created_at)
+    - updatedAt    : OffsetDateTime    (col: updated_at)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY Reader ────────────────────────── ONE ScanCenter
+    ONE  Reader ────────────────────────── MANY DetectionHistory
+
+
+--------------------------------------------------------------------------------
+  1.10 DocumentType  (com.example.compliance_service.entity)
+  Table: document_type
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id          : Long              [PK, auto-increment]
+    - name        : String            [NOT NULL, UNIQUE, max 100]
+    - description : String
+    - duration    : Integer           [days a document is valid]
+    - active      : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted     : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - createdAt   : OffsetDateTime    (col: created_at)
+    - updatedAt   : OffsetDateTime    (col: updated_at)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    ONE DocumentType ──────────────────── MANY Document
+
+
+--------------------------------------------------------------------------------
+  1.11 Document  (com.example.compliance_service.entity)
+  Table: document
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id              : Long              [PK, auto-increment]
+    - vehicle         : Vehicle           [@ManyToOne LAZY, FK: vehicle_id]
+    - documentType    : DocumentType      [@ManyToOne EAGER, FK: document_type_id]
+    - referenceNumber : String            [max 100]  (col: reference_number)
+    - startDate       : OffsetDateTime    (col: start_date)
+    - endDate         : OffsetDateTime    (col: end_date)
+    - imageUrl        : String            [max 500]  (col: image_url)
+    - active          : Boolean           [NOT NULL, default: true]    (col: is_active)
+    - deleted         : Boolean           [NOT NULL, default: false]   (col: is_deleted)
+    - createdAt       : OffsetDateTime    (col: created_at)
+    - updatedAt       : OffsetDateTime    (col: updated_at)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY Document ─────────────────────── ONE Vehicle
+    MANY Document ─────────────────────── ONE DocumentType
+
+
+--------------------------------------------------------------------------------
+  1.12 DetectionHistory  (com.example.compliance_service.entity)
+  Table: detection_history
+--------------------------------------------------------------------------------
+  FIELDS:
+    - id                : Long              [PK, auto-increment]
+    - vehicle           : Vehicle           [@ManyToOne EAGER, FK: vehicle_id]
+    - reader            : Reader            [@ManyToOne EAGER, FK: reader_id]
+    - owner             : User              [@ManyToOne EAGER, FK: owner_id]
+    - scanCenter        : ScanCenter        [@ManyToOne EAGER, FK: scancenter_id]
+    - complianceStatus  : String            [NOT NULL, max 50]   (col: compliance_status)
+    - description       : String            [TEXT]
+    - complianceMessage : String            [TEXT]               (col: compliance_message)
+    - comment           : String            [TEXT]
+    - createdAt         : OffsetDateTime    (col: created_at)
+
+  LOMBOK ANNOTATIONS:
+    @Data, @NoArgsConstructor, @AllArgsConstructor, @Builder
+
+  RELATIONSHIPS:
+    MANY DetectionHistory ─────────────── ONE Vehicle
+    MANY DetectionHistory ─────────────── ONE Reader
+    MANY DetectionHistory ─────────────── ONE User       (owner)
+    MANY DetectionHistory ─────────────── ONE ScanCenter
+
+
+================================================================================
+  SECTION 2: ENUMERATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+  2.1  EComplianceStatus  (com.example.compliance_service.dto.Enums)
+--------------------------------------------------------------------------------
+  VALUES:
+    FULLY_COMPLIANT   → All documents are valid
+    NEAR_EXPIRY       → One or more documents are about to expire
+    NON_COMPLIANT     → One or more documents have expired
+    UNKNOWN           → Compliance status cannot be determined
+
+
+================================================================================
+  SECTION 3: REPOSITORIES
+================================================================================
+
+  All repositories extend JpaRepository<Entity, Long> (Spring Data JPA)
+
+--------------------------------------------------------------------------------
+  3.1  RoleRepository
+  extends JpaRepository<Role, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String) : Optional<Role>
+
+--------------------------------------------------------------------------------
+  3.2  ScanCenterRepository
+  extends JpaRepository<ScanCenter, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String)     : Optional<ScanCenter>
+    + findByIsActiveTrue()         : List<ScanCenter>
+    + existsByName(name: String)   : boolean
+
+--------------------------------------------------------------------------------
+  3.3  UserRepository
+  extends JpaRepository<User, Long>, JpaSpecificationExecutor<User>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByUsername(username: String) : Optional<User>
+    + findByEmail(email: String)       : Optional<User>
+    + existsByUsername(username: String) : boolean
+    + existsByEmail(email: String)       : boolean
+
+--------------------------------------------------------------------------------
+  3.4  VehicleTypeRepository
+  extends JpaRepository<VehicleType, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String) : Optional<VehicleType>
+
+--------------------------------------------------------------------------------
+  3.5  VehicleMakeRepository
+  extends JpaRepository<VehicleMake, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String)   : Optional<VehicleMake>
+    + existsByName(name: String) : boolean
+
+--------------------------------------------------------------------------------
+  3.6  VehicleModelRepository
+  extends JpaRepository<VehicleModel, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByMakeId(makeId: Long)                         : List<VehicleModel>
+    + existsByNameAndMakeId(name: String, makeId: Long)  : boolean
+
+--------------------------------------------------------------------------------
+  3.7  VehicleRepository
+  extends JpaRepository<Vehicle, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByEpc(epc: String)                                     : Optional<Vehicle>
+    + findByEpcAndActiveTrue(epc: String)                        : Vehicle
+    + findByRegistrationNumber(regNum: String)                   : Optional<Vehicle>
+    + findByOwnerId(ownerId: Long)                               : List<Vehicle>
+    + findByIdAndOwnerId(id: Long, ownerId: Long)                : Optional<Vehicle>
+    + findTopByOrderByIdDesc()                                   : Optional<Vehicle>
+    + existsByEpc(epc: String)                                   : boolean
+    + existsByRegistrationNumber(regNum: String)                 : boolean
+    + existsByRegistrationNumberAndActiveTrue(regNum: String)    : boolean
+    + existsByVehicleNumber(vehicleNumber: String)               : boolean
+    + existsByVehicleNumberAndActiveTrue(vehicleNumber: String)  : boolean
+    + existsByChassisNumber(chassisNumber: String)               : boolean
+    + existsByChassisNumberAndActiveTrue(chassisNumber: String)  : boolean
+    + countByVehicleTypeIdAndOwnerId(typeId: Long, ownerId: Long): long
+    + findFirstInactiveUnownedByAnyIdentifier(
+        registrationNumber: String,
+        vehicleNumber: String,
+        chassisNumber: String)                                   : Optional<Vehicle>   [@Query]
+
+--------------------------------------------------------------------------------
+  3.8  ReaderRepository
+  extends JpaRepository<Reader, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String)                           : Optional<Reader>
+    + findByIpAddress(ipAddress: String)                 : Optional<Reader>
+    + findFirstByModel(model: String)                    : Optional<Reader>
+    + findByScanCenterId(scanCenterId: Long)             : List<Reader>
+    + findByScanCenter_Id(id: Long)                      : List<Reader>
+    + findByIdAndScanCenterId(id: Long, scanCenterId: Long) : Optional<Reader>
+    + existsByIdAndScanCenterId(id: Long, scanCenterId: Long) : boolean
+
+--------------------------------------------------------------------------------
+  3.9  DocumentTypeRepository
+  extends JpaRepository<DocumentType, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByName(name: String) : Optional<DocumentType>
+
+--------------------------------------------------------------------------------
+  3.10 DocumentRepository
+  extends JpaRepository<Document, Long>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByVehicleId(vehicleId: Long)                    : List<Document>
+    + findByDocumentTypeId(documentTypeId: Long)          : List<Document>
+    + findExpiredDocuments(
+        vehicleId: Long,
+        date: OffsetDateTime)                             : List<Document>   [@Query]
+    + findValidDocuments(
+        vehicleId: Long,
+        date: OffsetDateTime)                             : List<Document>   [@Query]
+    + findDocumentsExpiringSoon(
+        startDate: OffsetDateTime,
+        endDate: OffsetDateTime)                          : List<Document>   [@Query]
+    + existsByVehicleIdAndDocumentTypeId(
+        vehicleId: Long,
+        documentTypeId: Long)                             : boolean
+    + findDocumentTypeById(documentTypeId: Long)          : DocumentType
+
+--------------------------------------------------------------------------------
+  3.11 DetectionHistoryRepository
+  extends JpaRepository<DetectionHistory, Long>, JpaSpecificationExecutor<DetectionHistory>
+--------------------------------------------------------------------------------
+  METHODS:
+    + findByVehicleId(vehicleId: Long)                   : List<DetectionHistory>
+    + findByReaderId(readerId: Long)                     : List<DetectionHistory>
+    + findByComplianceStatus(status: String)             : List<DetectionHistory>
+    + findLatestDetectionsByVehicle(vehicleId: Long)     : List<DetectionHistory>   [@Query ORDER BY createdAt DESC]
+    + findNonCompliantDetections()                       : List<DetectionHistory>   [@Query WHERE status='NON_COMPLIANT']
+
+
+================================================================================
+  SECTION 4: SERVICE INTERFACES
+================================================================================
+
+--------------------------------------------------------------------------------
+  4.1  IAuthService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + register(request: RegisterRequest)  : AuthResponse
+    + login(request: LoginRequest)        : AuthResponse
+    + logout(token: String)              : String
+
+--------------------------------------------------------------------------------
+  4.2  IRoleService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllRoles()                                  : List<RoleResponse>
+    + getRoleById(id: Long)                          : RoleResponse
+    + createRole(request: RoleRequest)               : RoleResponse
+    + updateRole(id: Long, request: RoleRequest)     : RoleResponse
+    + deleteRole(id: Long)                           : void
+    + activateRole(id: Long)                         : RoleResponse
+    + deactivateRole(id: Long)                       : RoleResponse
+    + softDeleteRole(id: Long)                       : void
+
+--------------------------------------------------------------------------------
+  4.3  IScanCenterService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllScanCenters()                                           : List<ScanCenterResponse>
+    + getActiveScanCenters()                                       : List<ScanCenterResponse>
+    + getScanCenterById(id: Long)                                  : ScanCenterResponse
+    + getScanCenterByName(name: String)                            : ScanCenterResponse
+    + createScanCenter(request: ScanCenterRequest)                 : ScanCenterResponse
+    + updateScanCenter(id: Long, request: ScanCenterRequest)       : ScanCenterResponse
+    + deleteScanCenter(id: Long)                                   : void
+    + activateScanCenter(id: Long)                                 : ScanCenterResponse
+    + deactivateScanCenter(id: Long)                               : ScanCenterResponse
+    + softDeleteScanCenter(id: Long)                               : void
+
+--------------------------------------------------------------------------------
+  4.4  IUserService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getUsers(params: Map<String, Object>)                         : List<UserResponse>
+    + getOwnerUsers(params: Map<String, Object>)                    : List<OwnerUserResponse>
+    + getUserByUsername(username: String)                           : LogUserResponse
+    + getUserById(id: Long)                                         : VehicleUserResponse
+    + createUser(request: RegisterRequest)                          : UserResponse
+    + updateUser(id: Long, request: UpdateUserRequest)              : UserResponse
+    + deleteUser(id: Long)                                          : void
+    + createOwnerUser(id: Long, request: VehicleOwnerRequest)       : VehicleUserResponse
+    + updateOwnerUser(vehicleId: Long, request: VehicleOwnerRequest): VehicleUserResponse
+    + removeVehicleFromOwner(userId: Long, vehicleId: Long)         : VehicleDocumentResponse
+    + activateUser(id: Long)                                        : UserResponse
+    + deactivateUser(id: Long)                                      : UserResponse
+    + softDeleteUser(id: Long)                                      : void
+
+--------------------------------------------------------------------------------
+  4.5  IVehicleTypeService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleTypes()                                            : List<VehicleTypeResponse>
+    + getVehicleTypeById(id: Long)                                   : VehicleTypeResponse
+    + createVehicleType(request: VehicleTypeRequest)                 : VehicleTypeResponse
+    + updateVehicleType(id: Long, request: VehicleTypeRequest)       : VehicleTypeResponse
+    + deleteVehicleType(id: Long)                                    : void
+    + activateVehicleType(id: Long)                                  : VehicleTypeResponse
+    + deactivateVehicleType(id: Long)                                : VehicleTypeResponse
+    + softDeleteVehicleType(id: Long)                                : void
+
+--------------------------------------------------------------------------------
+  4.6  IVehicleMakeService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleMakes()                                            : List<VehicleMakeResponse>
+    + getVehicleMakeById(id: Long)                                   : VehicleMakeResponse
+    + createVehicleMake(request: VehicleMakeRequest)                 : VehicleMakeResponse
+    + updateVehicleMake(id: Long, request: VehicleMakeRequest)       : VehicleMakeResponse
+    + deleteVehicleMake(id: Long)                                    : void
+    + activateVehicleMake(id: Long)                                  : VehicleMakeResponse
+    + deactivateVehicleMake(id: Long)                                : VehicleMakeResponse
+    + softDeleteVehicleMake(id: Long)                                : void
+
+--------------------------------------------------------------------------------
+  4.7  IVehicleModelService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleModels()                                           : List<VehicleModelResponse>
+    + getVehicleModelsByMakeId(makeId: Long)                         : List<VehicleModelResponse>
+    + getVehicleModelById(id: Long)                                  : VehicleModelResponse
+    + createVehicleModel(request: VehicleModelRequest)               : VehicleModelResponse
+    + updateVehicleModel(id: Long, request: VehicleModelRequest)     : VehicleModelResponse
+    + deleteVehicleModel(id: Long)                                   : void
+    + activateVehicleModel(id: Long)                                 : VehicleModelResponse
+    + deactivateVehicleModel(id: Long)                               : VehicleModelResponse
+    + softDeleteVehicleModel(id: Long)                               : void
+
+--------------------------------------------------------------------------------
+  4.8  IVehicleService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicles()                                                : List<VehicleResponse>
+    + getVehicleById(id: Long)                                       : VehicleResponse
+    + getVehicleByEpc(epc: String)                                   : VehicleResponse
+    + getVehicleByRegistrationNumber(registrationNumber: String)     : VehicleResponse
+    + getVehiclesByOwnerId(ownerId: Long)                            : List<VehicleResponse>
+    + createVehicle(request: VehicleRequest)                         : VehicleResponse
+    + updateVehicle(id: Long, request: VehicleRequest)               : VehicleResponse
+    + deleteVehicle(id: Long)                                        : void
+    + activateVehicle(id: Long)                                      : VehicleResponse
+    + deactivateVehicle(id: Long)                                    : VehicleResponse
+    + softDeleteVehicle(id: Long)                                    : void
+
+--------------------------------------------------------------------------------
+  4.9  IReaderService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllReaders()                                                 : List<ReaderResponse>
+    + activateReader(id: Long)                                       : ReaderResponse
+    + deactivateReader(id: Long)                                     : ReaderResponse
+    + getReadersByScanCenter(scanCenterId: Long)                     : List<ReaderResponse>
+    + getReaderByScanCenterAndId(scanCenterId: Long, readerId: Long) : ReaderResponse
+    + createReaderForScanCenter(scanCenterId: Long, req: ReadersRequest) : ReaderResponse
+    + updateReaderForScanCenter(scanCenterId: Long, readerId: Long, req: ReadersRequest) : ReaderResponse
+    + deleteReaderForScanCenter(scanCenterId: Long, readerId: Long)  : void
+
+--------------------------------------------------------------------------------
+  4.10 IDocumentTypeService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllDocumentTypes()                                           : List<DocumentTypeResponse>
+    + getDocumentTypeById(id: Long)                                  : DocumentTypeResponse
+    + createDocumentType(request: DocumentTypeRequest)               : DocumentTypeResponse
+    + updateDocumentType(id: Long, request: DocumentTypeRequest)     : DocumentTypeResponse
+    + deleteDocumentType(id: Long)                                   : void
+    + activateDocumentType(id: Long)                                 : DocumentTypeResponse
+    + deactivateDocumentType(id: Long)                               : DocumentTypeResponse
+    + softDeleteDocumentType(id: Long)                               : void
+
+--------------------------------------------------------------------------------
+  4.11 IDocumentService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllDocuments()                                               : List<DocumentResponse>
+    + getDocumentById(id: Long)                                      : DocumentResponse
+    + getDocumentsByVehicleId(vehicleId: Long)                       : List<DocumentResponse>
+    + getDocumentsByDocumentTypeId(documentTypeId: Long)             : List<DocumentResponse>
+    + getExpiredDocumentsByVehicleId(vehicleId: Long)                : List<DocumentResponse>
+    + getValidDocumentsByVehicleId(vehicleId: Long)                  : List<DocumentResponse>
+    + getDocumentsExpiringSoon(days: int)                            : List<DocumentResponse>
+    + createDocument(request: DocumentRequest)                       : DocumentResponse
+    + updateDocument(id: Long, request: DocumentRequest)             : DocumentResponse
+    + deleteDocument(id: Long)                                       : void
+    + activateDocument(id: Long)                                     : DocumentResponse
+    + deactivateDocument(id: Long)                                   : DocumentResponse
+    + softDeleteDocument(id: Long)                                   : void
+
+--------------------------------------------------------------------------------
+  4.12 IDetectionHistoryService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + recordDetection(request: DetectionRequest)                     : DetectionHistoryResponse
+    + getAllDetections(params: Map<String, String>)                  : List<DetectionHistoryResponse>
+    + getDetectionsByVehicleId(vehicleId: Long)                     : List<DetectionHistoryResponse>
+    + getDetectionsByReaderId(readerId: Long)                       : List<DetectionHistoryResponse>
+    + getDetectionsByStatus(status: String)                         : List<DetectionHistoryResponse>
+    + getDetectionById(id: Long)                                    : DetectionHistoryResponse
+
+--------------------------------------------------------------------------------
+  4.13 ITokenBlacklistService  (com.example.compliance_service.service)
+--------------------------------------------------------------------------------
+  METHODS:
+    + blacklistToken(token: String) : void
+    + isTokenBlacklisted(token: String) : boolean
+
+
+================================================================================
+  SECTION 5: SERVICE IMPLEMENTATIONS
+================================================================================
+
+  Location: com.example.compliance_service.service.impl
+
+  AuthServiceImpl          implements IAuthService
+  RoleServiceImpl          implements IRoleService
+  ScanCenterServiceImpl    implements IScanCenterService
+  UserServiceImpl          implements IUserService
+  VehicleTypeServiceImpl   implements IVehicleTypeService
+  VehicleMakeServiceImpl   implements IVehicleMakeService
+  VehicleModelServiceImpl  implements IVehicleModelService
+  VehicleServiceImpl       implements IVehicleService
+  ReaderServiceImpl        implements IReaderService
+  DocumentTypeServiceImpl  implements IDocumentTypeService
+  DocumentServiceImpl      implements IDocumentService
+  DetectionHistoryServiceImpl implements IDetectionHistoryService
+  TokenBlacklistServiceImpl   implements ITokenBlacklistService
+  CustomUserDetailsServiceImpl implements UserDetailsService (Spring Security)
+    → loadUserByUsername(username: String) : UserDetails
+
+
+================================================================================
+  SECTION 6: REST CONTROLLERS
+================================================================================
+
+  Base URL: /api
+  All controllers annotated with @RestController, @RequestMapping, @RequiredArgsConstructor
+
+--------------------------------------------------------------------------------
+  6.1  AuthController
+  Route: /api/auth
+  Dependencies: IAuthService
+--------------------------------------------------------------------------------
+  METHODS:
+    + register(request: RegisterRequest)           : ResponseEntity<?>   [POST   /register]
+    + login(request: LoginRequest)                 : ResponseEntity<?>   [POST   /login]
+    + logout(token: String)                        : ResponseEntity<?>   [POST   /logout]
+
+--------------------------------------------------------------------------------
+  6.2  RoleController
+  Route: /api/roles
+  Dependencies: IRoleService
+  Security: Most endpoints require SUPERADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllRoles()                                 : ResponseEntity<?>   [GET    /]
+    + getRoleById(id: Long)                        : ResponseEntity<?>   [GET    /{id}]
+    + createRole(request: RoleRequest)             : ResponseEntity<?>   [POST   /]          [SUPERADMIN]
+    + updateRole(id: Long, request: RoleRequest)   : ResponseEntity<?>   [PUT    /{id}]      [SUPERADMIN]
+    + deleteRole(id: Long)                         : ResponseEntity<?>   [PATCH  /{id}/delete][SUPERADMIN]
+    + softDeleteRole(id: Long)                     : ResponseEntity<?>   [PATCH  /{id}]      [SUPERADMIN]
+    + manageRoleStatus(id: Long, active: boolean)  : ResponseEntity<?>   [PATCH  /{id}/status][SUPERADMIN]
+
+--------------------------------------------------------------------------------
+  6.3  ScanCenterController
+  Route: /api/scan-centers
+  Dependencies: IScanCenterService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllScanCenters()                                       : ResponseEntity<?>   [GET    /]
+    + getActiveScanCenters()                                   : ResponseEntity<?>   [GET    /active]
+    + getScanCenterById(id: Long)                              : ResponseEntity<?>   [GET    /{id}]
+    + getScanCenterByName(name: String)                        : ResponseEntity<?>   [GET    /name/{name}]
+    + createScanCenter(request: ScanCenterRequest)             : ResponseEntity<?>   [POST   /]
+    + updateScanCenter(id: Long, request: ScanCenterRequest)   : ResponseEntity<?>   [PUT    /{id}]
+    + deleteScanCenter(id: Long)                               : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteScanCenter(id: Long)                           : ResponseEntity<?>   [PATCH  /{id}]
+    + manageScanCenterStatus(id: Long, active: boolean)        : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.4  UserController
+  Route: /api/users
+  Dependencies: IUserService
+  Security: Various roles required per method
+--------------------------------------------------------------------------------
+  METHODS:
+    + getUsers(params: Map<String, Object>)                    : ResponseEntity<?>   [GET    /]
+    + getCurrentUser()                                         : ResponseEntity<?>   [GET    /me]
+    + getUserById(id: Long)                                    : ResponseEntity<?>   [GET    /{id}]
+    + createUser(request: RegisterRequest)                     : ResponseEntity<?>   [POST   /]              [SUPERADMIN/SYSTEM_ADMIN/ADMIN]
+    + createOwnerUser(id: Long, req: VehicleOwnerRequest)      : ResponseEntity<?>   [POST   /owner/{id}]    [SUPERADMIN/SYSTEM_ADMIN/ADMIN]
+    + updateOwnerUser(id: Long, req: VehicleOwnerRequest)      : ResponseEntity<?>   [PUT    /owner/{id}]    [SUPERADMIN/SYSTEM_ADMIN/ADMIN]
+    + removeVehicleFromOwner(userId: Long, vehicleId: Long)    : ResponseEntity<?>   [PATCH  /{userId}/vehicles/{vehicleId}/remove] [SUPERADMIN/SYSTEM_ADMIN/ADMIN]
+    + updateUser(id: Long, request: UpdateUserRequest)         : ResponseEntity<?>   [PUT    /{id}]          [SUPERADMIN/SYSTEM_ADMIN/ADMIN]
+    + deleteUser(id: Long)                                     : ResponseEntity<?>   [PATCH  /{id}/delete]   [SUPERADMIN/SYSTEM_ADMIN]
+    + softDeleteUser(id: Long)                                 : ResponseEntity<?>   [PATCH  /{id}]          [SUPERADMIN/SYSTEM_ADMIN]
+    + manageUserStatus(id: Long, active: boolean)              : ResponseEntity<?>   [PATCH  /{id}/status]   [SUPERADMIN/SYSTEM_ADMIN]
+
+--------------------------------------------------------------------------------
+  6.5  VehicleTypeController
+  Route: /api/vehicle-types
+  Dependencies: IVehicleTypeService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleTypes()                                      : ResponseEntity<?>   [GET    /]
+    + getVehicleTypeById(id: Long)                             : ResponseEntity<?>   [GET    /{id}]
+    + createVehicleType(request: VehicleTypeRequest)           : ResponseEntity<?>   [POST   /]
+    + updateVehicleType(id: Long, request: VehicleTypeRequest) : ResponseEntity<?>   [PUT    /{id}]
+    + deleteVehicleType(id: Long)                              : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteVehicleType(id: Long)                          : ResponseEntity<?>   [PATCH  /{id}]
+    + manageVehicleTypeStatus(id: Long, active: boolean)       : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.6  VehicleMakeController
+  Route: /api/vehicle-makes
+  Dependencies: IVehicleMakeService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleMakes()                                      : ResponseEntity<?>   [GET    /]
+    + getVehicleMakeById(id: Long)                             : ResponseEntity<?>   [GET    /{id}]
+    + createVehicleMake(request: VehicleMakeRequest)           : ResponseEntity<?>   [POST   /]
+    + updateVehicleMake(id: Long, request: VehicleMakeRequest) : ResponseEntity<?>   [PUT    /{id}]
+    + deleteVehicleMake(id: Long)                              : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteVehicleMake(id: Long)                          : ResponseEntity<?>   [PATCH  /{id}]
+    + manageVehicleMakeStatus(id: Long, active: boolean)       : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.7  VehicleModelController
+  Route: /api/vehicle-models
+  Dependencies: IVehicleModelService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicleModels()                                      : ResponseEntity<?>   [GET    /]
+    + getVehicleModelsByMakeId(makeId: Long)                    : ResponseEntity<?>   [GET    /make/{makeId}]
+    + getVehicleModelById(id: Long)                             : ResponseEntity<?>   [GET    /{id}]
+    + createVehicleModel(request: VehicleModelRequest)          : ResponseEntity<?>   [POST   /]
+    + updateVehicleModel(id: Long, request: VehicleModelRequest): ResponseEntity<?>   [PUT    /{id}]
+    + deleteVehicleModel(id: Long)                              : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteVehicleModel(id: Long)                          : ResponseEntity<?>   [PATCH  /{id}]
+    + manageVehicleModelStatus(id: Long, active: boolean)       : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.8  VehicleController
+  Route: /api/vehicles
+  Dependencies: IVehicleService
+  Security: Write endpoints require SUPERADMIN, ADMIN, or OWNER
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllVehicles()                                           : ResponseEntity<?>   [GET    /]
+    + getVehicleById(id: Long)                                  : ResponseEntity<?>   [GET    /{id}]
+    + getVehicleByEpc(epc: String)                              : ResponseEntity<?>   [GET    /epc/{epc}]
+    + getVehicleByRegistrationNumber(regNum: String)            : ResponseEntity<?>   [GET    /registration/{registrationNumber}]
+    + getVehiclesByOwnerId(ownerId: Long)                       : ResponseEntity<?>   [GET    /owner/{ownerId}]
+    + createVehicle(request: VehicleRequest)                    : ResponseEntity<?>   [POST   /]              [SUPERADMIN/ADMIN/OWNER]
+    + updateVehicle(id: Long, request: VehicleRequest)          : ResponseEntity<?>   [PUT    /{id}]          [SUPERADMIN/ADMIN/OWNER]
+    + deleteVehicle(id: Long)                                   : ResponseEntity<?>   [PATCH  /{id}/delete]   [SUPERADMIN/ADMIN]
+    + softDeleteVehicle(id: Long)                               : ResponseEntity<?>   [PATCH  /{id}]          [SUPERADMIN/ADMIN]
+    + manageVehicleStatus(id: Long, active: boolean)            : ResponseEntity<?>   [PATCH  /{id}/status]   [SUPERADMIN/ADMIN]
+
+--------------------------------------------------------------------------------
+  6.9  ReaderController
+  Route: /api/readers
+  Dependencies: IReaderService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllReaders()                                            : ResponseEntity<?>   [GET    /]
+    + manageReaderStatus(id: Long, active: boolean)             : ResponseEntity<?>   [PATCH  /{id}/status]
+    + getReadersByScanCenter(scanCenterId: Long)                : ResponseEntity<?>   [GET    /scan-center/{scanCenterId}]
+    + getReaderByScanCenterAndId(scId: Long, rId: Long)         : ResponseEntity<?>   [GET    /scan-center/{scanCenterId}/{readerId}]
+    + createReaderForScanCenter(scId: Long, req: ReadersRequest): ResponseEntity<?>   [POST   /scan-center/{scanCenterId}]
+    + updateReaderForScanCenter(scId, rId, req)                 : ResponseEntity<?>   [PUT    /scan-center/{scanCenterId}/{readerId}]
+    + deleteReaderForScanCenter(scId: Long, rId: Long)          : ResponseEntity<?>   [DELETE /scan-center/{scanCenterId}/{readerId}]
+
+--------------------------------------------------------------------------------
+  6.10 DocumentTypeController
+  Route: /api/document-types
+  Dependencies: IDocumentTypeService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllDocumentTypes()                                        : ResponseEntity<?>   [GET    /]
+    + getDocumentTypeById(id: Long)                               : ResponseEntity<?>   [GET    /{id}]
+    + createDocumentType(request: DocumentTypeRequest)            : ResponseEntity<?>   [POST   /]
+    + updateDocumentType(id: Long, request: DocumentTypeRequest)  : ResponseEntity<?>   [PUT    /{id}]
+    + deleteDocumentType(id: Long)                                : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteDocumentType(id: Long)                            : ResponseEntity<?>   [PATCH  /{id}]
+    + manageDocumentTypeStatus(id: Long, active: boolean)         : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.11 DocumentController
+  Route: /api/documents
+  Dependencies: IDocumentService
+  Security: Write endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + getAllDocuments()                                            : ResponseEntity<?>   [GET    /]
+    + getDocumentById(id: Long)                                   : ResponseEntity<?>   [GET    /{id}]
+    + getDocumentsByVehicleId(vehicleId: Long)                    : ResponseEntity<?>   [GET    /vehicle/{vehicleId}]
+    + getDocumentsByDocumentTypeId(documentTypeId: Long)          : ResponseEntity<?>   [GET    /type/{documentTypeId}]
+    + getExpiredDocumentsByVehicleId(vehicleId: Long)             : ResponseEntity<?>   [GET    /vehicle/{vehicleId}/expired]
+    + getValidDocumentsByVehicleId(vehicleId: Long)               : ResponseEntity<?>   [GET    /vehicle/{vehicleId}/valid]
+    + getDocumentsExpiringSoon(days: int)                         : ResponseEntity<?>   [GET    /expiring-soon?days=30]
+    + createDocument(request: DocumentRequest)                    : ResponseEntity<?>   [POST   /]
+    + updateDocument(id: Long, request: DocumentRequest)          : ResponseEntity<?>   [PUT    /{id}]
+    + deleteDocument(id: Long)                                    : ResponseEntity<?>   [PATCH  /{id}/delete]
+    + softDeleteDocument(id: Long)                                : ResponseEntity<?>   [PATCH  /{id}]
+    + manageDocumentStatus(id: Long, active: boolean)             : ResponseEntity<?>   [PATCH  /{id}/status]
+
+--------------------------------------------------------------------------------
+  6.12 DetectionHistoryController
+  Route: /api/detections
+  Dependencies: IDetectionHistoryService
+  Security: Most endpoints require SUPERADMIN or ADMIN
+--------------------------------------------------------------------------------
+  METHODS:
+    + recordDetection(request: DetectionRequest)                  : ResponseEntity<?>   [POST   /]
+    + getAllDetections(params: Map<String, String>)               : ResponseEntity<?>   [GET    /]              [SUPERADMIN/ADMIN]
+    + getDetectionById(id: Long)                                  : ResponseEntity<?>   [GET    /{id}]          [SUPERADMIN/ADMIN]
+    + getDetectionsByVehicle(vehicleId: Long)                     : ResponseEntity<?>   [GET    /vehicle/{vehicleId}] [SUPERADMIN/ADMIN/OWNER]
+    + getDetectionsByReader(readerId: Long)                       : ResponseEntity<?>   [GET    /reader/{readerId}]   [SUPERADMIN/ADMIN]
+    + getDetectionsByStatus(status: String)                       : ResponseEntity<?>   [GET    /status/{status}]     [SUPERADMIN/ADMIN]
+
+--------------------------------------------------------------------------------
+  6.13 PublicController
+  Route: /api/public
+  Dependencies: (public / no auth required)
+--------------------------------------------------------------------------------
+  [Handles publicly accessible endpoints — no authentication required]
+
+
+================================================================================
+  SECTION 7: ENTITY RELATIONSHIP SUMMARY
+================================================================================
+
+  Role           1 ──────────────────────────── * User
+  ScanCenter     1 ──────────────────────────── * User
+  ScanCenter     1 ──────────────────────────── * Reader
+  ScanCenter     1 ──────────────────────────── * DetectionHistory
+  User           1 ──────────────────────────── * Vehicle              (as owner)
+  User           1 ──────────────────────────── * DetectionHistory     (as owner)
+  VehicleType    1 ──────────────────────────── * Vehicle
+  VehicleMake    1 ──────────────────────────── * VehicleModel
+  VehicleModel   1 ──────────────────────────── * Vehicle
+  Vehicle        1 ──────────────────────────── * Document
+  Vehicle        1 ──────────────────────────── * DetectionHistory
+  DocumentType   1 ──────────────────────────── * Document
+  Reader         1 ──────────────────────────── * DetectionHistory
+
+
+================================================================================
+  SECTION 8: CONTROLLER → SERVICE → REPOSITORY DEPENDENCY CHAIN
+================================================================================
+
+  AuthController
+      └── IAuthService → AuthServiceImpl
+              ├── UserRepository
+              └── RoleRepository
+
+  RoleController
+      └── IRoleService → RoleServiceImpl
+              └── RoleRepository
+
+  ScanCenterController
+      └── IScanCenterService → ScanCenterServiceImpl
+              └── ScanCenterRepository
+
+  UserController
+      └── IUserService → UserServiceImpl
+              ├── UserRepository
+              ├── RoleRepository
+              ├── ScanCenterRepository
+              └── VehicleRepository
+
+  VehicleTypeController
+      └── IVehicleTypeService → VehicleTypeServiceImpl
+              └── VehicleTypeRepository
+
+  VehicleMakeController
+      └── IVehicleMakeService → VehicleMakeServiceImpl
+              └── VehicleMakeRepository
+
+  VehicleModelController
+      └── IVehicleModelService → VehicleModelServiceImpl
+              ├── VehicleModelRepository
+              └── VehicleMakeRepository
+
+  VehicleController
+      └── IVehicleService → VehicleServiceImpl
+              ├── VehicleRepository
+              ├── VehicleTypeRepository
+              ├── VehicleModelRepository
+              └── UserRepository
+
+  ReaderController
+      └── IReaderService → ReaderServiceImpl
+              ├── ReaderRepository
+              └── ScanCenterRepository
+
+  DocumentTypeController
+      └── IDocumentTypeService → DocumentTypeServiceImpl
+              └── DocumentTypeRepository
+
+  DocumentController
+      └── IDocumentService → DocumentServiceImpl
+              ├── DocumentRepository
+              ├── VehicleRepository
+              └── DocumentTypeRepository
+
+  DetectionHistoryController
+      └── IDetectionHistoryService → DetectionHistoryServiceImpl
+              ├── DetectionHistoryRepository
+              ├── VehicleRepository
+              ├── DocumentRepository
+              ├── ReaderRepository
+              └── ScanCenterRepository
+
+
+================================================================================
+  SECTION 9: SECURITY ROLES
+================================================================================
+
+  SUPERADMIN         → Full system access
+  SYSTEM_ADMIN       → System-level admin access
+  ADMIN              → Manages users and scan centers
+  OWNER              → Vehicle owner access
+  SCAN_CENTER_ADMIN  → Scan center management access
+  SCAN_CENTER_USER   → Scan center operational access
+
+
+================================================================================
+  END OF CLASS DIAGRAM
+================================================================================
+

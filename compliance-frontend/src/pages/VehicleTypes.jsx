@@ -10,6 +10,7 @@ import {
 import { X } from "lucide-react";
 import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../utils/responseNotifier";
+import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
 
 export function VehicleTypes() {
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -202,16 +203,20 @@ export function VehicleTypes() {
     );
   }
 
+  const userCanManage = canManage(getUserRole(), PAGES.VEHICLE_TYPES);
+
   return (
     <>
       <DataTable
         title="Vehicle Types"
         columns={columns}
         data={vehicleTypes}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
+        onAdd={userCanManage ? handleAdd : undefined}
+        onEdit={userCanManage ? handleEdit : undefined}
+        onDelete={userCanManage ? handleDelete : undefined}
+        onToggleStatus={userCanManage ? handleToggleStatus : undefined}
+        showAddButton={userCanManage}
+        showActions={userCanManage}
       />
 
       {/* Modal for Add/Edit */}
