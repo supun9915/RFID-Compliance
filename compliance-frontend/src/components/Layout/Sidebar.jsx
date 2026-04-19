@@ -10,6 +10,8 @@ import {
   Radar,
   Activity,
   UserCircle,
+  Printer,
+  Settings,
 } from "lucide-react";
 import { canView, PAGES, getUserRole } from "../Data/Permissions";
 
@@ -71,6 +73,12 @@ export function Sidebar({ activePage, onNavigate }) {
       label: "Vehicle Models",
       page: PAGES.VEHICLE_MODELS,
     },
+    {
+      id: "vehiclePrint",
+      icon: Printer,
+      label: "RFID Label Print",
+      page: PAGES.VEHICLE_PRINT,
+    },
   ].filter((item) => canView(userRole, item.page));
 
   return (
@@ -115,6 +123,15 @@ export function Sidebar({ activePage, onNavigate }) {
           <UserCircle className="w-5 h-5" />
           My Account
         </button>
+        {canView(userRole, PAGES.PRINTER_SETTINGS) && (
+          <button
+            onClick={() => onNavigate("printerSettings")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activePage === "printerSettings" ? "bg-gray-200 text-gray-900 shadow-lg shadow-gray-900/20" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+          >
+            <Settings className="w-5 h-5" />
+            Printer Settings
+          </button>
+        )}
       </nav>
     </aside>
   );

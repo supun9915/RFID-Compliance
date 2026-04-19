@@ -11,23 +11,23 @@ import {
 
 const STATUSES = [
   { value: "", label: "All Statuses" },
-  { value: "FULLY_COMPLIANT", label: "Fully Compliant" },
+  { value: "VALID", label: "Valid" },
   { value: "NEAR_EXPIRY", label: "Near Expiry" },
-  { value: "NON_COMPLIANT", label: "Non-Compliant" },
+  { value: "EXPIRED", label: "Expired" },
   { value: "UNKNOWN", label: "Unknown" },
 ];
 
 const STATUS_STYLES = {
-  FULLY_COMPLIANT: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-  NON_COMPLIANT: "bg-red-50 text-red-700 border border-red-100",
+  VALID: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+  EXPIRED: "bg-red-50 text-red-700 border border-red-100",
   NEAR_EXPIRY: "bg-amber-50 text-amber-700 border border-amber-100",
   UNKNOWN: "bg-gray-100 text-gray-600 border border-gray-200",
 };
 
 const STATUS_LABELS = {
-  FULLY_COMPLIANT: "Fully Compliant",
+  VALID: "Valid",
   NEAR_EXPIRY: "Near Expiry",
-  NON_COMPLIANT: "Non-Compliant",
+  EXPIRED: "Expired",
   UNKNOWN: "Unknown",
 };
 

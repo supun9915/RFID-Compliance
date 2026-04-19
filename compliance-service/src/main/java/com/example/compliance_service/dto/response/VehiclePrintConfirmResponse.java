@@ -1,0 +1,25 @@
+package com.example.compliance_service.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class VehiclePrintConfirmResponse {
+
+    private Long vehicleId;
+    private String registrationNumber;
+    private String vehicleNumber;
+    private String epc;
+    private Boolean isPrinted;
+    private OffsetDateTime printDate;
+    private String printByUsername;
+    private Boolean newEpcGenerated;
+}
+

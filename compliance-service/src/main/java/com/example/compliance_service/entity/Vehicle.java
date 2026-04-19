@@ -62,6 +62,17 @@ public class Vehicle {
     @Builder.Default
     private Boolean deleted = false;
 
+    @Column(name = "is_printed", nullable = false)
+    @Builder.Default
+    private Boolean printed = false;
+
+    @Column(name = "print_date")
+    private OffsetDateTime printDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "print_by")
+    private User printBy;
+
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<Document> documents;
 

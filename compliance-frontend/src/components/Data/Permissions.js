@@ -38,6 +38,8 @@ export const PAGES = {
   VEHICLE_MODELS: "Vehicle Models",
   ACCOUNT: "Account",
   VEHICLE: "Vehicle",
+  VEHICLE_PRINT: "Vehicle Print",
+  PRINTER_SETTINGS: "Printer Settings",
 };
 
 export const permissions = {
@@ -137,6 +139,16 @@ export const permissions = {
   [PAGES.VEHICLE]: {
     view: [ROLES.OWNER],
     manage: [ROLES.OWNER],
+  },
+
+  [PAGES.VEHICLE_PRINT]: {
+    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+  },
+
+  [PAGES.PRINTER_SETTINGS]: {
+    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 };
 

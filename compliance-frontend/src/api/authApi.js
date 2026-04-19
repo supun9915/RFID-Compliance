@@ -1,4 +1,4 @@
-import { POST, request } from "./apiAdapter";
+import { GET, POST, request } from "./apiAdapter";
 
 /**
  * Login with username and password.
@@ -55,4 +55,26 @@ export const logoutUser = async () => {
  */
 export const isAuthenticated = () => {
   return !!localStorage.getItem("token");
+};
+
+/**
+ * Get current user profile.
+ * @returns {Promise<{ success: boolean, data?: object, message?: string }>}
+ */
+export const getUserProfile = async () => {
+  const response = await request("/users/profile", GET);
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to fetch user profile";
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
 };

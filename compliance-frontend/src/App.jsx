@@ -14,6 +14,8 @@ import { Settings } from "./pages/Settings";
 import { DetectionHistory } from "./pages/DetectionHistory";
 import { Account } from "./pages/Account";
 import { Login } from "./pages/Login";
+import { VehiclePrint } from "./pages/VehiclePrint";
+import { PrinterSettings } from "./pages/PrinterSettings";
 import { isAuthenticated } from "./api/authApi";
 import { ApiResponsePopup } from "./components/Shared/ApiResponsePopup";
 import { subscribeToResponseNotifications } from "./utils/responseNotifier";
@@ -90,6 +92,13 @@ export function App() {
         return guard(PAGES.ADMIN_USERS, <AdminUsers />);
       case "detections":
         return guard(PAGES.DETECTION_HISTORY, <DetectionHistory />);
+      case "vehiclePrint":
+        return guard(
+          PAGES.VEHICLE_PRINT,
+          <VehiclePrint onNavigate={setCurrentPage} />,
+        );
+      case "printerSettings":
+        return guard(PAGES.PRINTER_SETTINGS, <PrinterSettings />);
       case "settings":
         return <Settings />;
       case "account":
@@ -117,7 +126,7 @@ export function App() {
 
             {/* Scrollable Content */}
             <main className="flex-1 p-6 overflow-y-auto">
-              <div className="max-w-7xl mx-auto">{renderPage()}</div>
+              <div className="mx-auto">{renderPage()}</div>
             </main>
           </div>
         </div>
