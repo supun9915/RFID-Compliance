@@ -271,14 +271,14 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
         boolean hasExpiredOrMissing = results.stream()
                 .anyMatch(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()));
         if (hasExpiredOrMissing) {
-            return EComplianceStatus.NON_COMPLIANT;
+            return EComplianceStatus.EXPIRED;
         }
         boolean hasNearExpiry = results.stream()
                 .anyMatch(r -> "NEAR_EXPIRY".equals(r.getStatus()));
         if (hasNearExpiry) {
             return EComplianceStatus.NEAR_EXPIRY;
         }
-        return EComplianceStatus.FULLY_COMPLIANT;
+        return EComplianceStatus.VALID;
     }
 
     /**
@@ -338,9 +338,9 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
         // Append a one-line overall verdict
         String verdict;
         switch (status) {
-            case FULLY_COMPLIANT: verdict = "All documents valid.";           break;
+            case VALID: verdict = "All documents valid.";           break;
             case NEAR_EXPIRY:     verdict = "Some documents expiring soon.";  break;
-            case NON_COMPLIANT:   verdict = "Action required.";               break;
+            case EXPIRED:   verdict = "Action required.";               break;
             default:              verdict = "Status unknown.";                break;
         }
 
