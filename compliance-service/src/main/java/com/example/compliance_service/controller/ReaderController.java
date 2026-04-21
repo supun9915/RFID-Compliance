@@ -1,8 +1,10 @@
 package com.example.compliance_service.controller;
 
 import com.example.compliance_service.dto.request.ReadersRequest;
+import com.example.compliance_service.dto.request.ReaderCommandRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.ReaderResponse;
+import com.example.compliance_service.dto.response.ReaderCommandResponse;
 import com.example.compliance_service.service.IReaderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -113,5 +115,24 @@ public class ReaderController {
             @PathVariable Long readerId) {
         readerService.deleteReaderForScanCenter(scanCenterId, readerId);
         return ResponseEntity.ok(ApiResponse.success("Reader deleted successfully", null));
+    }
+
+    /**
+     * Send a start or stop command to a reader via MQTT.
+     * POST /api/readers/{readerId}/command
+     *
+     * Request body:
+     * {
+     *   "commandId": "abcd1234",
+     *   "command":   "start" | "stop"
+     * }
+     */
+    @PostMapping("/{readerId}/command")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    public ResponseEntity<?> sendReaderCommand(
+            @PathVariable Long readerId,
+            @Valid @RequestBody ReaderCommandRequest request) {
+        ReaderCommandResponse response = readerService.sendReaderCommand(readerId, request);
+        return ResponseEntity.ok(ApiResponse.success("Reader command processed", response));
     }
 }

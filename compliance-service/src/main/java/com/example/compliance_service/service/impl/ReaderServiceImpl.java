@@ -2,10 +2,13 @@ package com.example.compliance_service.service.impl;
 
 import com.example.compliance_service.dto.request.ReaderRequest;
 import com.example.compliance_service.dto.request.ReadersRequest;
+import com.example.compliance_service.dto.request.ReaderCommandRequest;
 import com.example.compliance_service.dto.response.ReaderResponse;
+import com.example.compliance_service.dto.response.ReaderCommandResponse;
 import com.example.compliance_service.entity.Reader;
 import com.example.compliance_service.entity.ScanCenter;
 import com.example.compliance_service.exception.ResourceNotFoundException;
+import com.example.compliance_service.mqtt.MqttCommandPublisher;
 import com.example.compliance_service.repository.ReaderRepository;
 import com.example.compliance_service.repository.ScanCenterRepository;
 import com.example.compliance_service.service.IReaderService;
@@ -23,6 +26,7 @@ public class ReaderServiceImpl implements IReaderService {
 
     private final ReaderRepository readerRepository;
     private final ScanCenterRepository scanCenterRepository;
+    private final MqttCommandPublisher mqttCommandPublisher;
 
     @Override
     public List<ReaderResponse> getAllReaders() {
@@ -164,6 +168,11 @@ public class ReaderServiceImpl implements IReaderService {
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .deleted(false)
                 .scanCenter(scanCenter)
+                .mqttBrokerUrl(request.getMqttBrokerUrl())
+                .mqttClientId(request.getMqttClientId())
+                .mqttQos(request.getMqttQos() != null ? request.getMqttQos() : 1)
+                .mqttUsername(request.getMqttUsername())
+                .mqttPassword(request.getMqttPassword())
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -187,6 +196,11 @@ public class ReaderServiceImpl implements IReaderService {
         if (request.getIsActive() != null) {
             reader.setIsActive(request.getIsActive());
         }
+        reader.setMqttBrokerUrl(request.getMqttBrokerUrl());
+        reader.setMqttClientId(request.getMqttClientId());
+        if (request.getMqttQos() != null) reader.setMqttQos(request.getMqttQos());
+        reader.setMqttUsername(request.getMqttUsername());
+        reader.setMqttPassword(request.getMqttPassword());
         reader.setUpdatedAt(OffsetDateTime.now());
 
         return mapToResponse(readerRepository.save(reader));
@@ -217,6 +231,52 @@ public class ReaderServiceImpl implements IReaderService {
                 .orElseThrow(() -> new ResourceNotFoundException("ScanCenter not found with id: " + scanCenterId));
     }
 
+    @Override
+    public ReaderCommandResponse sendReaderCommand(Long readerId, ReaderCommandRequest request) {
+        Reader reader = readerRepository.findById(readerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reader not found with id: " + readerId));
+
+        String brokerUrl     = reader.getMqttBrokerUrl();
+        String clientId      = reader.getMqttClientId();
+
+        if (brokerUrl == null || brokerUrl.isBlank()) {
+            throw new IllegalStateException("Reader id=" + readerId + " has no MQTT broker URL configured");
+        }
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalStateException("Reader id=" + readerId + " has no MQTT client ID configured");
+        }
+
+        int qos = reader.getMqttQos() != null ? reader.getMqttQos() : 1;
+
+        try {
+            String topic = mqttCommandPublisher.buildCommandTopic(reader.getModel(), reader.getSerialNumber());
+            mqttCommandPublisher.publishCommand( brokerUrl, clientId,
+                    reader.getMqttUsername(), reader.getMqttPassword(),
+                    qos, topic, request.getCommand(), request.getCommandId());
+
+            return ReaderCommandResponse.builder()
+                    .readerId(reader.getId())
+                    .readerName(reader.getName())
+                    .mqttClientId(clientId)
+                    .command(request.getCommand())
+                    .commandId(request.getCommandId())
+                    .status("SENT")
+                    .message("Command '" + request.getCommand() + "' published successfully")
+                    .build();
+
+        } catch (Exception e) {
+            return ReaderCommandResponse.builder()
+                    .readerId(reader.getId())
+                    .readerName(reader.getName())
+                    .mqttClientId(clientId)
+                    .command(request.getCommand())
+                    .commandId(request.getCommandId())
+                    .status("FAILED")
+                    .message("Failed to publish command: " + e.getMessage())
+                    .build();
+        }
+    }
+
     private ReaderResponse mapToResponse(Reader reader) {
         return ReaderResponse.builder()
                 .id(reader.getId())
@@ -231,6 +291,10 @@ public class ReaderServiceImpl implements IReaderService {
                 .scanCenterName(reader.getScanCenter() != null ? reader.getScanCenter().getName() : null)
                 .createdAt(reader.getCreatedAt())
                 .updatedAt(reader.getUpdatedAt())
+                .mqttBrokerUrl(reader.getMqttBrokerUrl())
+                .mqttClientId(reader.getMqttClientId())
+                .mqttQos(reader.getMqttQos())
+                .mqttUsername(reader.getMqttUsername())
                 .build();
     }
 }

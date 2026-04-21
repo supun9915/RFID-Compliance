@@ -32,4 +32,26 @@ public class ReadersRequest {
     private String model;
 
     private Boolean isActive = true;
+
+    // ── MQTT Configuration ────────────────────────────────────────────────────
+
+    @Size(max = 255, message = "MQTT broker URL must be at most 255 characters")
+    private String mqttBrokerUrl;
+
+    @Size(max = 100, message = "MQTT client ID must be at most 100 characters")
+    private String mqttClientId;
+
+    @Size(max = 255, message = "MQTT topic must be at most 255 characters")
+    private String mqttTopic;
+
+    @Size(max = 255, message = "MQTT command topic must be at most 255 characters")
+    private String mqttCommandTopic;
+
+    private Integer mqttQos = 1;
+
+    @Size(max = 100, message = "MQTT username must be at most 100 characters")
+    private String mqttUsername;
+
+    @Size(max = 255, message = "MQTT password must be at most 255 characters")
+    private String mqttPassword;
 }

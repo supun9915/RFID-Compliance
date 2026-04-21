@@ -25,4 +25,12 @@ public class ReaderResponse {
     private String scanCenterName;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+
+    // ── MQTT Configuration ────────────────────────────────────────────────────
+    private String mqttBrokerUrl;
+    private String mqttClientId;
+    private String mqttTopic;
+    private String mqttCommandTopic;
+    private Integer mqttQos;
+    private String mqttUsername;
 }
