@@ -112,5 +112,63 @@ public class MqttCommandPublisher {
             return "{}";
         }
     }
-}
 
+    /**
+     * Publish a set_gpo command to the given reader's command topic.
+     *
+     * @param port      GPO port number (1 = green/compliant, 2 = red/non-compliant)
+     * @param state     GPO state (true = ON, false = OFF)
+     * @param commandId Correlation ID
+     */
+    public void publishGpoCommand(String brokerUrl, String clientId, String username, String password, int qos,
+                                  String topic, int port, boolean state, String commandId) throws MqttException {
+
+        String publisherClientId = clientId + "-gpo-" + System.currentTimeMillis();
+
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setCleanSession(true);
+        options.setConnectionTimeout(10);
+        options.setAutomaticReconnect(false);
+        if (username != null && !username.isBlank()) {
+            options.setUserName(username);
+            options.setPassword(password != null ? password.toCharArray() : new char[0]);
+        }
+
+        MqttClient client = new MqttClient(brokerUrl, publisherClientId,
+                new org.eclipse.paho.client.mqttv3.persist.MemoryPersistence());
+        try {
+            client.connect(options);
+            log.info("MQTT GPO publisher connected → broker: {}, topic: {}", brokerUrl, topic);
+
+            String payload = buildGpoPayload(port, state, commandId);
+            MqttMessage mqttMessage = new MqttMessage(payload.getBytes());
+            mqttMessage.setQos(qos);
+            mqttMessage.setRetained(false);
+
+            client.publish(topic, mqttMessage);
+            log.info("✓ GPO command published | port={} | state={} | commandId={} | topic={}",
+                    port, state, commandId, topic);
+        } finally {
+            if (client.isConnected()) {
+                client.disconnect();
+            }
+            client.close();
+        }
+    }
+
+    private String buildGpoPayload(int port, boolean state, String commandId) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("command", "set_gpo");
+            body.put("command_id", commandId);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("port", port);
+            payload.put("state", state);
+            body.put("payload", payload);
+            return objectMapper.writeValueAsString(body);
+        } catch (Exception e) {
+            log.error("Failed to serialize GPO command payload", e);
+            return "{}";
+        }
+    }
+}

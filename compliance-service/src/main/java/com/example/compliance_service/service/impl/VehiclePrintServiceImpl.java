@@ -171,7 +171,7 @@ public class VehiclePrintServiceImpl implements IVehiclePrintService {
         long safeModelId = vehicleModelId != null ? vehicleModelId & 0xFFFFL : 0L;
         long safeSerial  = nextSerial & 0xFFFFFFL;
 
-        String epc = String.format("01%04X%04X00000000%06X", safeTypeId, safeModelId, safeSerial);
+        String epc = String.format("05%04X%04X00000000%06X", safeTypeId, safeModelId, safeSerial);
 
         // Increment and persist the serial number back to the sequence table
         sequence.setSerialNumber(nextSerial + 1);
@@ -225,38 +225,22 @@ public class VehiclePrintServiceImpl implements IVehiclePrintService {
 
         // Default ZPL template – RFID label with key vehicle data
         return String.format(
-                "^XA\n" +
-                "^MMT\n" +
-                "^PW609\n" +
-                "^LL0203\n" +
-                "^LS0\n" +
-                // EPC RFID write
-                "^RFW,E^FD%s^FS\n" +
-                // Title bar
-                "^FO20,10^A0N,28,28^FDRFID Vehicle Label^FS\n" +
-                // Registration Number
-                "^FO20,50^A0N,24,24^FDReg No : %s^FS\n" +
-                // Vehicle Number
-                "^FO20,80^A0N,24,24^FDVehicle : %s^FS\n" +
-                // Chassis
-                "^FO20,110^A0N,20,20^FDChassis : %s^FS\n" +
-                // Year
-                "^FO20,135^A0N,20,20^FDYear    : %s^FS\n" +
-                // Owner
-                "^FO20,160^A0N,20,20^FDOwner   : %s^FS\n" +
-                // Type / Model
-                "^FO20,185^A0N,18,18^FD%s / %s^FS\n" +
-                // EPC barcode
-                "^FO400,50^BY2^BCN,60,N,N^FD%s^FS\n" +
-                "^XZ",
+                "^XA\\n\" +\n" +
+                        "\"^MMT\\n\" +\n" +
+                        "\"^PW543\\n\" +\n" +
+                        "\"^LL272\\n\" +\n" +
+                        "\"^LS0\\n\" +\n" +
+                        "\"^RFW,E^FD%s^FS\\n\" +\n" +
+                        "\"^FO50,60^A0N,28,28^FDRFID Vehicle Label^FS\\n\" +\n" +
+                        "\"^FO50,120^A0N,24,24^FDReg No : %s^FS\\n\" +\n" +
+                        "\"^FO50,160^A0N,24,24^FDVehicle : %s^FS\\n\" +\n" +
+                        "\"^FO50,200^A0N,24,24^FDYear     : %s^FS\\n\" +\n" +
+                        "\"^FO400,80^BQN,2,5^FDMA,%s^FS\\n\" +\n" +
+                        "\"^XZ",
                 epc,
                 nvl(vehicle.getRegistrationNumber()),
                 nvl(vehicle.getVehicleNumber()),
-                nvl(vehicle.getChassisNumber()),
                 vehicle.getRegisteredYear() != null ? vehicle.getRegisteredYear().toString() : "N/A",
-                ownerName,
-                typeName,
-                modelName,
                 epc
         );
     }

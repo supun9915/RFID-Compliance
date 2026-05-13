@@ -1073,7 +1073,7 @@ public class UserServiceImpl implements IUserService {
         long safeModelId = vehicleModelId != null ? vehicleModelId & 0xFFFFL : 0L;
         long safeSerial  = nextSerial & 0xFFFFFFL;
 
-        String epc = String.format("01%04X%04X00000000%06X",
+        String epc = String.format("05%04X%04X00000000%06X",
                 safeTypeId, safeModelId, safeSerial);
 
         EpcResponse epcResponse = new EpcResponse();
