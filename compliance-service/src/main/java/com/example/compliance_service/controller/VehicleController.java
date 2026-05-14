@@ -3,6 +3,7 @@ package com.example.compliance_service.controller;
 import com.example.compliance_service.dto.request.VehicleRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.VehicleResponse;
+import com.example.compliance_service.service.IUserService;
 import com.example.compliance_service.service.IVehicleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 public class VehicleController {
 
     private final IVehicleService vehicleService;
+    private final IUserService userService;
 
     /**
      * Get all vehicles
@@ -68,6 +70,21 @@ public class VehicleController {
     public ResponseEntity<?> getVehiclesByOwnerId(@PathVariable Long ownerId) {
         List<VehicleResponse> vehicles = vehicleService.getVehiclesByOwnerId(ownerId);
         return ResponseEntity.ok(ApiResponse.success("Vehicles retrieved successfully", vehicles));
+    }
+
+    /**
+     * Search vehicles by vehicle number, registration number, owner name, or NIC.
+     * GET /api/vehicles/search?q={query}
+     */
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    public ResponseEntity<?> searchVehicles(@RequestParam String q) {
+        if (q == null || q.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Search query must not be empty"));
+        }
+        return ResponseEntity.ok(
+                ApiResponse.success("Search completed", userService.searchVehicles(q)));
     }
 
     /**

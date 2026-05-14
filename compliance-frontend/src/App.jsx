@@ -16,6 +16,7 @@ import { Account } from "./pages/Account";
 import { Login } from "./pages/Login";
 import { VehiclePrint } from "./pages/VehiclePrint";
 import { PrinterSettings } from "./pages/PrinterSettings";
+import { VehicleSearch } from "./pages/VehicleSearch";
 import { isAuthenticated } from "./api/authApi";
 import { ApiResponsePopup } from "./components/Shared/ApiResponsePopup";
 import { subscribeToResponseNotifications } from "./utils/responseNotifier";
@@ -99,6 +100,8 @@ export function App() {
         );
       case "printerSettings":
         return guard(PAGES.PRINTER_SETTINGS, <PrinterSettings />);
+      case "vehicleSearch":
+        return guard(PAGES.VEHICLE_SEARCH, <VehicleSearch />);
       case "settings":
         return <Settings />;
       case "account":

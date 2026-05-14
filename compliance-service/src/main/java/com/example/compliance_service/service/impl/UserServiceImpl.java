@@ -106,6 +106,30 @@ public class UserServiceImpl implements IUserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<VehicleUserResponse> searchVehicles(String query) {
+        String q = "%" + query.toLowerCase().trim() + "%";
+
+        // Find vehicles matching vehicle number or registration number
+        List<Vehicle> vehicleMatches = vehicleRepository.searchByVehicleNumberOrRegistration(q);
+
+        // Collect unique owner IDs from vehicle matches (preserve insertion order)
+        java.util.Set<Long> ownerIds = new java.util.LinkedHashSet<>();
+        vehicleMatches.stream()
+                .filter(v -> v.getOwner() != null)
+                .map(v -> v.getOwner().getId())
+                .forEach(ownerIds::add);
+
+        // Also find owners matching by name or NIC
+        List<User> ownerMatches = userRepository.searchOwnersByNameOrNic(q);
+        ownerMatches.stream().map(User::getId).forEach(ownerIds::add);
+
+        // Return full owner + vehicle + document data for each matched owner
+        return ownerIds.stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
+
     private OwnerUserResponse mapToOwnerUserResponse(User user) {
         List<Vehicle> vehicles = vehicleRepository.findByOwnerId(user.getId());
         List<OwnerVehicleResponse> vehicleResponses = vehicles.stream()
