@@ -55,7 +55,7 @@ public class VehicleModelController {
      * POST /api/vehicle-models
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createVehicleModel(@Valid @RequestBody VehicleModelRequest request) {
         VehicleModelResponse vehicleModel = vehicleModelService.createVehicleModel(request);
         return ResponseEntity
@@ -68,7 +68,7 @@ public class VehicleModelController {
      * PUT /api/vehicle-models/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateVehicleModel(
             @PathVariable Long id,
             @Valid @RequestBody VehicleModelRequest request) {
@@ -81,7 +81,7 @@ public class VehicleModelController {
      * PATCH /api/vehicle-models/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicleModel(@PathVariable Long id) {
         vehicleModelService.deleteVehicleModel(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle model deleted successfully", null));
@@ -92,7 +92,7 @@ public class VehicleModelController {
      * PATCH /api/vehicle-models/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteVehicleModel(@PathVariable Long id) {
         vehicleModelService.softDeleteVehicleModel(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle model soft-deleted successfully", null));
@@ -104,7 +104,7 @@ public class VehicleModelController {
      * PATCH /api/vehicle-models/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageVehicleModelStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

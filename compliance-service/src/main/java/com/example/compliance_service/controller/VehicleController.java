@@ -75,7 +75,7 @@ public class VehicleController {
      * POST /api/vehicles
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> createVehicle(@Valid @RequestBody VehicleRequest request) {
         VehicleResponse vehicle = vehicleService.createVehicle(request);
         return ResponseEntity
@@ -88,7 +88,7 @@ public class VehicleController {
      * PUT /api/vehicles/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest request) {
@@ -101,7 +101,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
         vehicleService.deleteVehicle(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle deleted successfully", null));
@@ -112,7 +112,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteVehicle(@PathVariable Long id) {
         vehicleService.softDeleteVehicle(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle soft-deleted successfully", null));
@@ -124,7 +124,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageVehicleStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

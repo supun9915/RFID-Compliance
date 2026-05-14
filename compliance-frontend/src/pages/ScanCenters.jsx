@@ -14,7 +14,12 @@ import {
 import { X, Plus, Edit2, Cpu, Trash2 } from "lucide-react";
 import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../utils/responseNotifier";
-import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
+import {
+  canManage,
+  PAGES,
+  getUserRole,
+  ROLES,
+} from "../components/Data/Permissions";
 
 export function ScanCenters() {
   const [scanCenters, setScanCenters] = useState([]);
@@ -23,6 +28,22 @@ export function ScanCenters() {
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const userRole = getUserRole();
+  const isScanCenterRole =
+    userRole === ROLES.SCAN_CENTER_ADMIN || userRole === ROLES.SCAN_CENTER_USER;
+
+  // Get the user's assigned scan center from localStorage
+  const assignedScanCenterId = React.useMemo(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (!stored) return null;
+      const user = JSON.parse(stored);
+      return user.scanCenter?.id || null;
+    } catch (_) {
+      return null;
+    }
+  }, []);
 
   // Readers management state
   const [showReadersModal, setShowReadersModal] = useState(false);
@@ -69,7 +90,14 @@ export function ScanCenters() {
         return;
       }
 
-      const normalized = (result.data || []).map((item) => ({
+      let rawData = result.data || [];
+
+      // Scan center roles should only see their assigned scan center
+      if (isScanCenterRole && assignedScanCenterId) {
+        rawData = rawData.filter((item) => item.id === assignedScanCenterId);
+      }
+
+      const normalized = rawData.map((item) => ({
         id: item.id,
         name: item.name,
         city: item.city,
@@ -462,6 +490,8 @@ export function ScanCenters() {
   }
 
   const userCanManage = canManage(getUserRole(), PAGES.SCAN_CENTER);
+  const userCanManageReaders =
+    userCanManage || userRole === ROLES.SCAN_CENTER_ADMIN;
 
   return (
     <>
@@ -627,7 +657,7 @@ export function ScanCenters() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {userCanManage && (
+                {userCanManageReaders && (
                   <button
                     onClick={handleAddReader}
                     className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -719,7 +749,7 @@ export function ScanCenters() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            {userCanManage && (
+                            {userCanManageReaders && (
                               <button
                                 className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                                 title="Edit Reader"
@@ -728,7 +758,7 @@ export function ScanCenters() {
                                 <Edit2 className="w-4 h-4 text-blue-600" />
                               </button>
                             )}
-                            {userCanManage && (
+                            {userCanManageReaders && (
                               <button
                                 className="p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                                 title="Delete Reader"

@@ -36,7 +36,7 @@ export function TopBar({ onLogout, onNavigate }) {
   };
 
   return (
-    <header className="h-16 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-10 ml-64">
+    <header className="h-16 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-50 ml-64">
       {/* Left: Search */}
       <div className="flex items-center gap-4">
         <button className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md">

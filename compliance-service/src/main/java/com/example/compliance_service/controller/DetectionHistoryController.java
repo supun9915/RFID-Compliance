@@ -44,7 +44,7 @@ public class DetectionHistoryController {
      * Supported params: id, scanCenterId, vehicleId, ownerId, readerId, status
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN', 'SCAN_CENTER_USER')")
     public ResponseEntity<?> getAllDetections(@RequestParam(required = false) Map<String, String> params) {
         List<DetectionHistoryResponse> detections = detectionHistoryService.getAllDetections(params);
         return ResponseEntity.ok(ApiResponse.success("Detection history retrieved successfully", detections));
@@ -55,7 +55,7 @@ public class DetectionHistoryController {
      * GET /api/detections/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN', 'SCAN_CENTER_USER')")
     public ResponseEntity<?> getDetectionById(@PathVariable Long id) {
         DetectionHistoryResponse detection = detectionHistoryService.getDetectionById(id);
         return ResponseEntity.ok(ApiResponse.success("Detection record retrieved successfully", detection));
@@ -66,7 +66,7 @@ public class DetectionHistoryController {
      * GET /api/detections/vehicle/{vehicleId}
      */
     @GetMapping("/vehicle/{vehicleId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> getDetectionsByVehicle(@PathVariable Long vehicleId) {
         List<DetectionHistoryResponse> detections = detectionHistoryService.getDetectionsByVehicleId(vehicleId);
         return ResponseEntity.ok(ApiResponse.success("Detection history retrieved successfully", detections));
@@ -77,7 +77,7 @@ public class DetectionHistoryController {
      * GET /api/detections/reader/{readerId}
      */
     @GetMapping("/reader/{readerId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN', 'SCAN_CENTER_USER')")
     public ResponseEntity<?> getDetectionsByReader(@PathVariable Long readerId) {
         List<DetectionHistoryResponse> detections = detectionHistoryService.getDetectionsByReaderId(readerId);
         return ResponseEntity.ok(ApiResponse.success("Detection history retrieved successfully", detections));
@@ -89,7 +89,7 @@ public class DetectionHistoryController {
      * Valid statuses: FULLY_COMPLIANT, NEAR_EXPIRY, NON_COMPLIANT, UNKNOWN
      */
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN', 'SCAN_CENTER_USER')")
     public ResponseEntity<?> getDetectionsByStatus(@PathVariable String status) {
         List<DetectionHistoryResponse> detections = detectionHistoryService.getDetectionsByStatus(status);
         return ResponseEntity.ok(ApiResponse.success("Detection history retrieved successfully", detections));

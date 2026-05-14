@@ -34,6 +34,7 @@ public class UserController {
      * If no params provided, returns all users
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
         if (params.containsKey("role")) {
             List<String> roles = Arrays.stream(params.get("role").toString().split(","))
@@ -124,6 +125,7 @@ public class UserController {
      * POST /api/users/{id}
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         VehicleUserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", user));
@@ -147,7 +149,7 @@ public class UserController {
      * PATCH /api/users/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
@@ -158,7 +160,7 @@ public class UserController {
      * PATCH /api/users/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteUser(@PathVariable Long id) {
         userService.softDeleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User soft-deleted successfully", null));
@@ -170,7 +172,7 @@ public class UserController {
      * PATCH /api/users/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageUserStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

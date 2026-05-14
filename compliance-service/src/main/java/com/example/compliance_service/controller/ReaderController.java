@@ -38,7 +38,7 @@ public class ReaderController {
      * PATCH /api/readers/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageReaderStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {
@@ -80,7 +80,7 @@ public class ReaderController {
      * POST /api/readers/scan-center/{scanCenterId}
      */
     @PostMapping("/scan-center/{scanCenterId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> createReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @Valid @RequestBody ReadersRequest request) {
@@ -95,7 +95,7 @@ public class ReaderController {
      * PUT /api/readers/scan-center/{scanCenterId}/{readerId}
      */
     @PutMapping("/scan-center/{scanCenterId}/{readerId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> updateReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @PathVariable Long readerId,
@@ -109,7 +109,7 @@ public class ReaderController {
      * DELETE /api/readers/scan-center/{scanCenterId}/{readerId}
      */
     @DeleteMapping("/scan-center/{scanCenterId}/{readerId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> deleteReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @PathVariable Long readerId) {
@@ -128,7 +128,7 @@ public class ReaderController {
      * }
      */
     @PostMapping("/{readerId}/command")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> sendReaderCommand(
             @PathVariable Long readerId,
             @Valid @RequestBody ReaderCommandRequest request) {
