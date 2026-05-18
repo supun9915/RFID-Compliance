@@ -27,4 +27,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
         "LOWER(u.firstName) LIKE :q OR LOWER(u.lastName) LIKE :q OR " +
         "LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE :q OR LOWER(u.nic) LIKE :q)")
     List<User> searchOwnersByNameOrNic(@org.springframework.data.repository.query.Param("q") String q);
+
+    List<User> findByScanCenter_IdAndDeletedFalse(Long scanCenterId);
 }

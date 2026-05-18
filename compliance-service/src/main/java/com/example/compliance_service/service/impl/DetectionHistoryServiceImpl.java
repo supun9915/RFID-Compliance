@@ -9,6 +9,7 @@ import com.example.compliance_service.entity.*;
 import com.example.compliance_service.exception.ResourceNotFoundException;
 import com.example.compliance_service.repository.*;
 import com.example.compliance_service.service.IDetectionHistoryService;
+import com.example.compliance_service.service.IEmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,6 +34,8 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
     private final VehicleRepository vehicleRepository;
     private final ReaderRepository readerRepository;
     private final DocumentRepository documentRepository;
+    private final UserRepository userRepository;
+    private final IEmailService emailService;
 
     // ── Record Detection ───────────────────────────────────────────────────────
 
@@ -98,7 +102,17 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
 
         DetectionHistory saved = detectionHistoryRepository.save(detectionHistory);
 
-        // 10. Map to response
+        // 10. Trigger email notifications based on compliance status
+        if (overallStatus == EComplianceStatus.EXPIRED) {
+            List<User> scanCenterUsers = scanCenter != null
+                    ? userRepository.findByScanCenter_IdAndDeletedFalse(scanCenter.getId())
+                    : Collections.emptyList();
+            emailService.sendDocumentExpiredNotification(vehicle, owner, scanCenter, validationResults, scanCenterUsers);
+        } else if (overallStatus == EComplianceStatus.NEAR_EXPIRY) {
+            emailService.sendDocumentNearExpiryNotification(vehicle, owner, validationResults);
+        }
+
+        // 11. Map to response
         return mapToResponse(saved, validationResults);
     }
 
