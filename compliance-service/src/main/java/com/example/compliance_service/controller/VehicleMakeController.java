@@ -45,7 +45,7 @@ public class VehicleMakeController {
      * POST /api/vehicle-makes
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createVehicleMake(@Valid @RequestBody VehicleMakeRequest request) {
         VehicleMakeResponse vehicleMake = vehicleMakeService.createVehicleMake(request);
         return ResponseEntity
@@ -58,7 +58,7 @@ public class VehicleMakeController {
      * PUT /api/vehicle-makes/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateVehicleMake(
             @PathVariable Long id,
             @Valid @RequestBody VehicleMakeRequest request) {
@@ -71,7 +71,7 @@ public class VehicleMakeController {
      * PATCH /api/vehicle-makes/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicleMake(@PathVariable Long id) {
         vehicleMakeService.deleteVehicleMake(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle make deleted successfully", null));
@@ -82,7 +82,7 @@ public class VehicleMakeController {
      * PATCH /api/vehicle-makes/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteVehicleMake(@PathVariable Long id) {
         vehicleMakeService.softDeleteVehicleMake(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle make soft-deleted successfully", null));
@@ -94,7 +94,7 @@ public class VehicleMakeController {
      * PATCH /api/vehicle-makes/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageVehicleMakeStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

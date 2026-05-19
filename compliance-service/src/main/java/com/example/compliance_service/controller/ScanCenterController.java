@@ -65,7 +65,7 @@ public class ScanCenterController {
      * POST /api/scan-centers
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createScanCenter(@Valid @RequestBody ScanCenterRequest request) {
         ScanCenterResponse scanCenter = scanCenterService.createScanCenter(request);
         return ResponseEntity
@@ -78,7 +78,7 @@ public class ScanCenterController {
      * PUT /api/scan-centers/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateScanCenter(
             @PathVariable Long id,
             @Valid @RequestBody ScanCenterRequest request) {
@@ -91,7 +91,7 @@ public class ScanCenterController {
      * PATCH /api/scan-centers/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteScanCenter(@PathVariable Long id) {
         scanCenterService.deleteScanCenter(id);
         return ResponseEntity.ok(ApiResponse.success("Scan center deleted successfully", null));
@@ -102,7 +102,7 @@ public class ScanCenterController {
      * PATCH /api/scan-centers/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteScanCenter(@PathVariable Long id) {
         scanCenterService.softDeleteScanCenter(id);
         return ResponseEntity.ok(ApiResponse.success("Scan center soft-deleted successfully", null));
@@ -114,7 +114,7 @@ public class ScanCenterController {
      * PATCH /api/scan-centers/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageScanCenterStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

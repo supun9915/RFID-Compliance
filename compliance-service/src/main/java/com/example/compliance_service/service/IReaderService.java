@@ -1,7 +1,9 @@
 package com.example.compliance_service.service;
 
 import com.example.compliance_service.dto.request.ReadersRequest;
+import com.example.compliance_service.dto.request.ReaderCommandRequest;
 import com.example.compliance_service.dto.response.ReaderResponse;
+import com.example.compliance_service.dto.response.ReaderCommandResponse;
 
 import java.util.List;
 
@@ -29,4 +31,13 @@ public interface IReaderService {
 
     /** Soft-delete a reader that belongs to the given scan center. */
     void deleteReaderForScanCenter(Long scanCenterId, Long readerId);
+
+    /**
+     * Send a start or stop command to the reader via MQTT.
+     *
+     * @param readerId the reader id
+     * @param request  command details (command and command_id)
+     * @return response with reader and command info
+     */
+    ReaderCommandResponse sendReaderCommand(Long readerId, ReaderCommandRequest request);
 }

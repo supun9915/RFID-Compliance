@@ -36,6 +36,7 @@ export const PAGES = {
   VEHICLE_TYPES: "Vehicle Types",
   VEHICLE_MAKES: "Vehicle Makes",
   VEHICLE_MODELS: "Vehicle Models",
+  VEHICLE_SEARCH: "Vehicle Search",
   ACCOUNT: "Account",
   VEHICLE: "Vehicle",
   VEHICLE_PRINT: "Vehicle Print",
@@ -65,9 +66,10 @@ export const permissions = {
       ROLES.SUPER_ADMIN,
       ROLES.SYSTEM_ADMIN,
       ROLES.ADMIN,
+      ROLES.SCAN_CENTER_ADMIN,
       ROLES.SCAN_CENTER_USER,
     ],
-    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.SCAN_CENTER_USER],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 
   [PAGES.SCAN_CENTER]: {
@@ -78,7 +80,7 @@ export const permissions = {
       ROLES.SCAN_CENTER_ADMIN,
       ROLES.SCAN_CENTER_USER,
     ],
-    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.SCAN_CENTER_ADMIN],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN],
   },
 
   [PAGES.DETECTION_HISTORY]: {
@@ -103,17 +105,35 @@ export const permissions = {
   },
 
   [PAGES.VEHICLE_TYPES]: {
-    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    view: [
+      ROLES.SUPER_ADMIN,
+      ROLES.SYSTEM_ADMIN,
+      ROLES.ADMIN,
+      ROLES.SCAN_CENTER_ADMIN,
+      ROLES.SCAN_CENTER_USER,
+    ],
     manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 
   [PAGES.VEHICLE_MAKES]: {
-    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    view: [
+      ROLES.SUPER_ADMIN,
+      ROLES.SYSTEM_ADMIN,
+      ROLES.ADMIN,
+      ROLES.SCAN_CENTER_ADMIN,
+      ROLES.SCAN_CENTER_USER,
+    ],
     manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 
   [PAGES.VEHICLE_MODELS]: {
-    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    view: [
+      ROLES.SUPER_ADMIN,
+      ROLES.SYSTEM_ADMIN,
+      ROLES.ADMIN,
+      ROLES.SCAN_CENTER_ADMIN,
+      ROLES.SCAN_CENTER_USER,
+    ],
     manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 
@@ -139,6 +159,11 @@ export const permissions = {
   [PAGES.VEHICLE]: {
     view: [ROLES.OWNER],
     manage: [ROLES.OWNER],
+  },
+
+  [PAGES.VEHICLE_SEARCH]: {
+    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN, ROLES.ADMIN],
   },
 
   [PAGES.VEHICLE_PRINT]: {

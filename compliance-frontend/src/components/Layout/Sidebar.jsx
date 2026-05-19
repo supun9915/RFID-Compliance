@@ -12,6 +12,7 @@ import {
   UserCircle,
   Printer,
   Settings,
+  Search,
 } from "lucide-react";
 import { canView, PAGES, getUserRole } from "../Data/Permissions";
 
@@ -54,6 +55,12 @@ export function Sidebar({ activePage, onNavigate }) {
       icon: Users,
       label: "Owners",
       page: PAGES.OWNERS,
+    },
+    {
+      id: "vehicleSearch",
+      icon: Search,
+      label: "Vehicle Search",
+      page: PAGES.VEHICLE_SEARCH,
     },
     {
       id: "admins",

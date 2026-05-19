@@ -33,7 +33,7 @@ public class VehiclePrintController {
      * - isPrinted = true  → generate new EPC, persist it, return fresh ZPL
      */
     @PostMapping("/templates")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getVehiclePrintTemplates(
             @Valid @RequestBody VehiclePrintTemplateRequest request) {
 
@@ -55,7 +55,7 @@ public class VehiclePrintController {
      *                              then update vehicle with new EPC + print details
      */
     @PostMapping("/confirm")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> confirmPrint(
             @Valid @RequestBody VehiclePrintConfirmRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {

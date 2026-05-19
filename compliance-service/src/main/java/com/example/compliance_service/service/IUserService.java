@@ -29,6 +29,14 @@ public interface IUserService {
     List<OwnerUserResponse> getOwnerUsers(Map<String, Object> params);
 
     /**
+     * Search owners by vehicle number, registration number, owner name, or NIC.
+     * Returns full owner + vehicles + documents data for each matching owner.
+     * @param query search term
+     * @return List of matching owners with vehicle and document details
+     */
+    List<VehicleUserResponse> searchVehicles(String query);
+
+    /**
      * Get user by username
      * @param username Username
      * @return User details

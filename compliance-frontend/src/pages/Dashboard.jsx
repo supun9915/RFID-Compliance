@@ -5,6 +5,7 @@ import { LiveDetectionFeed } from "../components/Dashboard/LiveDetectionFeed";
 import { Car, FileWarning, Radio, AlertOctagon } from "lucide-react";
 import { getScanCenters } from "../api/scanCentersApi";
 import { getDetections } from "../api/detectionsApi";
+import { getUserRole, ROLES } from "../components/Data/Permissions";
 
 export function Dashboard() {
   const [userProfile, setUserProfile] = useState(null);
@@ -12,6 +13,10 @@ export function Dashboard() {
   const [selectedScanCenter, setSelectedScanCenter] = useState("");
   const [detections, setDetections] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const userRole = getUserRole();
+  const isScanCenterRole =
+    userRole === ROLES.SCAN_CENTER_ADMIN || userRole === ROLES.SCAN_CENTER_USER;
 
   // Get user profile from localStorage (set during login)
   useEffect(() => {
@@ -98,20 +103,28 @@ export function Dashboard() {
             happening today.
           </p>
         </div>
-        <div className="flex gap-3">
-          {userProfile?.scanCenter === null && scanCenters.length > 0 && (
-            <select
-              className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              value={selectedScanCenter}
-              onChange={(e) => setSelectedScanCenter(e.target.value)}
-            >
-              <option value="">All Locations</option>
-              {scanCenters.map((center) => (
-                <option key={center.id} value={center.id}>
-                  {center.name}
-                </option>
-              ))}
-            </select>
+        <div className="flex gap-3 items-center">
+          {isScanCenterRole && userProfile?.scanCenter ? (
+            <span className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2">
+              {userProfile.scanCenter.name}
+            </span>
+          ) : (
+            !isScanCenterRole &&
+            userProfile?.scanCenter === null &&
+            scanCenters.length > 0 && (
+              <select
+                className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                value={selectedScanCenter}
+                onChange={(e) => setSelectedScanCenter(e.target.value)}
+              >
+                <option value="">All Locations</option>
+                {scanCenters.map((center) => (
+                  <option key={center.id} value={center.id}>
+                    {center.name}
+                  </option>
+                ))}
+              </select>
+            )
           )}
           <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
             Generate Report
@@ -120,13 +133,13 @@ export function Dashboard() {
       </div>
 
       {/* Main Content Grid - Alerts Table (Left, Larger) and Live Feed + Small Stats (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Compliance Alerts Table (Takes up 3/4 width) */}
-        <div className="lg:col-span-3 h-[700px]">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Left Column: Compliance Alerts Table (Takes up 4/5 width) */}
+        <div className="lg:col-span-4 h-[700px]">
           <ComplianceAlerts detections={detections} loading={loading} />
         </div>
 
-        {/* Right Column: Stats Summary and Live Feed (Takes up 1/4 width) */}
+        {/* Right Column: Stats Summary and Live Feed (Takes up 1/5 width) */}
         <div className="lg:col-span-1 space-y-6">
           {/* Compact Stats Cards */}
           <div className="space-y-3">
@@ -145,7 +158,7 @@ export function Dashboard() {
               trend="+5% vs last week"
               trendUp={false}
               icon={FileWarning}
-              color="amber"
+              color="red"
             />
 
             <StatCard
@@ -162,7 +175,7 @@ export function Dashboard() {
               trend="-2% vs yesterday"
               trendUp={true}
               icon={AlertOctagon}
-              color="red"
+              color="purple"
             />
           </div>
         </div>

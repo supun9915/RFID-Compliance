@@ -45,7 +45,7 @@ public class DocumentTypeController {
      * POST /api/document-types
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createDocumentType(@Valid @RequestBody DocumentTypeRequest request) {
         DocumentTypeResponse documentType = documentTypeService.createDocumentType(request);
         return ResponseEntity
@@ -58,7 +58,7 @@ public class DocumentTypeController {
      * PUT /api/document-types/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateDocumentType(
             @PathVariable Long id,
             @Valid @RequestBody DocumentTypeRequest request) {
@@ -71,7 +71,7 @@ public class DocumentTypeController {
      * PATCH /api/document-types/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteDocumentType(@PathVariable Long id) {
         documentTypeService.deleteDocumentType(id);
         return ResponseEntity.ok(ApiResponse.success("Document type deleted successfully", null));
@@ -82,7 +82,7 @@ public class DocumentTypeController {
      * PATCH /api/document-types/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteDocumentType(@PathVariable Long id) {
         documentTypeService.softDeleteDocumentType(id);
         return ResponseEntity.ok(ApiResponse.success("Document type soft-deleted successfully", null));
@@ -94,7 +94,7 @@ public class DocumentTypeController {
      * PATCH /api/document-types/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageDocumentTypeStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {
