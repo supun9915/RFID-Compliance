@@ -103,13 +103,28 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
         DetectionHistory saved = detectionHistoryRepository.save(detectionHistory);
 
         // 10. Trigger email notifications based on compliance status
-        if (overallStatus == EComplianceStatus.EXPIRED) {
+        // Check for expired/missing and near-expiry independently so that both emails
+        // are sent when a vehicle has documents in both states simultaneously.
+        boolean hasExpiredOrMissing = validationResults.stream()
+                .anyMatch(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()));
+        boolean hasNearExpiry = validationResults.stream()
+                .anyMatch(r -> "NEAR_EXPIRY".equals(r.getStatus()));
+
+        if (hasExpiredOrMissing) {
             List<User> scanCenterUsers = scanCenter != null
                     ? userRepository.findByScanCenter_IdAndDeletedFalse(scanCenter.getId())
                     : Collections.emptyList();
-            emailService.sendDocumentExpiredNotification(vehicle, owner, scanCenter, validationResults, scanCenterUsers);
-        } else if (overallStatus == EComplianceStatus.NEAR_EXPIRY) {
-            emailService.sendDocumentNearExpiryNotification(vehicle, owner, validationResults);
+            List<DetectionHistoryResponse.DocumentValidationResult> expiredResults = validationResults.stream()
+                    .filter(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()))
+                    .collect(Collectors.toList());
+            emailService.sendDocumentExpiredNotification(vehicle, owner, scanCenter, expiredResults, scanCenterUsers);
+        }
+
+        if (hasNearExpiry) {
+            List<DetectionHistoryResponse.DocumentValidationResult> nearExpiryResults = validationResults.stream()
+                    .filter(r -> "NEAR_EXPIRY".equals(r.getStatus()))
+                    .collect(Collectors.toList());
+            emailService.sendDocumentNearExpiryNotification(vehicle, owner, nearExpiryResults);
         }
 
         // 11. Map to response

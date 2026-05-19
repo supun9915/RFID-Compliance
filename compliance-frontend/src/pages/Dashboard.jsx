@@ -133,13 +133,13 @@ export function Dashboard() {
       </div>
 
       {/* Main Content Grid - Alerts Table (Left, Larger) and Live Feed + Small Stats (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Compliance Alerts Table (Takes up 3/4 width) */}
-        <div className="lg:col-span-3 h-[700px]">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Left Column: Compliance Alerts Table (Takes up 4/5 width) */}
+        <div className="lg:col-span-4 h-[700px]">
           <ComplianceAlerts detections={detections} loading={loading} />
         </div>
 
-        {/* Right Column: Stats Summary and Live Feed (Takes up 1/4 width) */}
+        {/* Right Column: Stats Summary and Live Feed (Takes up 1/5 width) */}
         <div className="lg:col-span-1 space-y-6">
           {/* Compact Stats Cards */}
           <div className="space-y-3">

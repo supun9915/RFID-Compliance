@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 export function ComplianceAlerts({ detections = [], loading = false }) {
+  const documentOrder = ["revenuelicense", "insurance", "emissiontest"];
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState("today");
@@ -115,6 +117,8 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
 
     const documents = [];
     const parts = message.split("|").map((part) => part.trim());
+    const normalizeName = (value = "") =>
+      value.toLowerCase().replace(/[^a-z]/g, "");
 
     parts.forEach((part) => {
       if (part.includes(":")) {
@@ -125,7 +129,19 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
       }
     });
 
-    return documents;
+    return documents.sort((a, b) => {
+      const aIndex = documentOrder.indexOf(normalizeName(a.name));
+      const bIndex = documentOrder.indexOf(normalizeName(b.name));
+
+      const safeAIndex = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+      const safeBIndex = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+
+      if (safeAIndex !== safeBIndex) {
+        return safeAIndex - safeBIndex;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
   };
 
   // Get document status badge styling
@@ -134,6 +150,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
 
     if (statusLower === "valid") {
       return {
+        bgColor: "bg-green-50",
         textColor: "text-green-700",
         borderColor: "border-green-100",
         icon: CheckCircle2,
@@ -141,6 +158,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
       };
     } else if (statusLower === "expired") {
       return {
+        bgColor: "bg-red-50",
         textColor: "text-red-700",
         borderColor: "border-red-100",
         icon: XCircle,
@@ -151,6 +169,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
       statusLower.includes("expiring")
     ) {
       return {
+        bgColor: "bg-amber-50",
         textColor: "text-amber-700",
         borderColor: "border-amber-100",
         icon: AlertCircle,
@@ -158,7 +177,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
       };
     } else {
       return {
-        barColor: "bg-red-500",
+        bgColor: "bg-red-50",
         textColor: "text-red-700",
         borderColor: "border-red-100",
         icon: AlertCircle,
@@ -279,16 +298,16 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                   {/* Vehicle Info Header */}
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     {/* Left: Vehicle Info */}
-                    <div className="flex-shrink-0">
-                      <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 min-w-[260px]">
+                      <div className="flex items-center w-full gap-3">
                         <h4 className="font-semibold text-gray-900 text-base">
                           {detection.vehicleRegistrationNumber}
                         </h4>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(detection.complianceStatus)}`}
+                        <div
+                          className={`w-24 ml-auto inline-flex justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(detection.complianceStatus)}`}
                         >
                           {detection.complianceStatus}
-                        </span>
+                        </div>
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
                         {detection.ownerFullName}
@@ -296,7 +315,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                     </div>
 
                     {/* Middle: Document Status Badges */}
-                    <div className=" flex-col items-end gap-2 ml-auto">
+                    <div className="flex-1 min-w-[280px] flex flex-wrap justify-center gap-2">
                       {documents.map((doc, idx) => {
                         const style = getDocumentStatusStyle(doc.status);
                         const Icon = style.icon;
@@ -304,7 +323,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                         return (
                           <div
                             key={idx}
-                            className={`inline-flex items-center ml-1 gap-2 px-3 py-1.5 rounded-lg border ${style.bgColor} ${style.borderColor} ${style.textColor}`}
+                            className={`w-56 inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border ${style.bgColor} ${style.borderColor} ${style.textColor}`}
                           >
                             <Icon
                               className={`w-3.5 h-3.5 ${style.iconColor}`}
@@ -322,7 +341,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                     </div>
 
                     {/* Right: Timestamp */}
-                    <div className="flex flex-col items-end gap-2 ml-auto">
+                    <div className="flex flex-col items-end gap-2">
                       <div className="text-xs text-gray-400 flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
                         {formatDetectionTime(detection.createdAt)}
