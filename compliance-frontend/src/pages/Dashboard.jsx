@@ -158,7 +158,7 @@ export function Dashboard() {
               trend="+5% vs last week"
               trendUp={false}
               icon={FileWarning}
-              color="amber"
+              color="red"
             />
 
             <StatCard
@@ -175,7 +175,7 @@ export function Dashboard() {
               trend="-2% vs yesterday"
               trendUp={true}
               icon={AlertOctagon}
-              color="red"
+              color="purple"
             />
           </div>
         </div>

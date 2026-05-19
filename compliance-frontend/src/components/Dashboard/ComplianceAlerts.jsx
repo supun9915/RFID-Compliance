@@ -134,38 +134,35 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
 
     if (statusLower === "valid") {
       return {
-        bgColor: "bg-green-50",
         textColor: "text-green-700",
         borderColor: "border-green-100",
         icon: CheckCircle2,
-        iconColor: "text-green-700",
+        iconColor: "text-green-500",
       };
     } else if (statusLower === "expired") {
       return {
-        bgColor: "bg-red-50",
         textColor: "text-red-700",
         borderColor: "border-red-100",
         icon: XCircle,
-        iconColor: "text-red-600",
+        iconColor: "text-red-500",
       };
     } else if (
       statusLower.includes("near expiry") ||
       statusLower.includes("expiring")
     ) {
       return {
-        bgColor: "bg-amber-50",
         textColor: "text-amber-700",
         borderColor: "border-amber-100",
         icon: AlertCircle,
-        iconColor: "text-amber-600",
+        iconColor: "text-amber-500",
       };
     } else {
       return {
-        bgColor: "bg-red-50",
+        barColor: "bg-red-500",
         textColor: "text-red-700",
         borderColor: "border-red-100",
         icon: AlertCircle,
-        iconColor: "text-gray-600",
+        iconColor: "text-red-500",
       };
     }
   };
@@ -174,11 +171,11 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "EXPIRED":
-        return "bg-red-50 text-red-700 border border-red-100";
+        return "bg-red-500 text-white";
       case "VALID":
-        return "bg-green-50 text-green-700 border border-green-100";
+        return "bg-green-500 text-white";
       default:
-        return "bg-amber-50 text-amber-700 border border-amber-100";
+        return "bg-amber-500 text-white";
     }
   };
 
