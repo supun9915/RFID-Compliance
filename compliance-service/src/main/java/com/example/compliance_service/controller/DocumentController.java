@@ -95,7 +95,7 @@ public class DocumentController {
      * POST /api/documents
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> createDocument(@Valid @RequestBody DocumentRequest request) {
         DocumentResponse document = documentService.createDocument(request);
         return ResponseEntity
@@ -108,7 +108,7 @@ public class DocumentController {
      * PUT /api/documents/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> updateDocument(
             @PathVariable Long id,
             @Valid @RequestBody DocumentRequest request) {
@@ -121,7 +121,7 @@ public class DocumentController {
      * PATCH /api/documents/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocument(id);
         return ResponseEntity.ok(ApiResponse.success("Document deleted successfully", null));
@@ -132,7 +132,7 @@ public class DocumentController {
      * PATCH /api/documents/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteDocument(@PathVariable Long id) {
         documentService.softDeleteDocument(id);
         return ResponseEntity.ok(ApiResponse.success("Document soft-deleted successfully", null));
@@ -144,7 +144,7 @@ public class DocumentController {
      * PATCH /api/documents/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageDocumentStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

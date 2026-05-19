@@ -11,6 +11,7 @@ import com.example.compliance_service.repository.UserRepository;
 import com.example.compliance_service.repository.VehicleMakeRepository;
 import com.example.compliance_service.repository.VehicleModelRepository;
 import com.example.compliance_service.repository.VehicleRepository;
+import com.example.compliance_service.repository.VehicleSequenceRepository;
 import com.example.compliance_service.repository.VehicleTypeRepository;
 import com.example.compliance_service.service.IVehicleService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class VehicleServiceImpl implements IVehicleService {
     private final VehicleTypeRepository vehicleTypeRepository;
     private final VehicleModelRepository vehicleModelRepository;
     private final UserRepository userRepository;
+    private final VehicleSequenceRepository vehicleSequenceRepository;
 
     @Override
     public List<VehicleResponse> getAllVehicles() {
@@ -117,10 +119,15 @@ public class VehicleServiceImpl implements IVehicleService {
     }
 
     private EpcResponse generateEpc(Long vehicleTypeId, Long vehicleModelId) {
-        // Determine the next serial number from the last vehicle record
-        long nextSerial = vehicleRepository.findTopByOrderByIdDesc()
-                .map(v -> v.getNextSerialNumber() != null ? v.getNextSerialNumber() : 1L)
-                .orElse(1L);
+        // Read the current serial number from the vehicle_sequence table
+        com.example.compliance_service.entity.VehicleSequence sequence =
+                vehicleSequenceRepository.findTopByOrderByIdAsc()
+                        .orElseGet(() -> vehicleSequenceRepository.save(
+                                com.example.compliance_service.entity.VehicleSequence.builder()
+                                        .serialNumber(1L)
+                                        .build()));
+
+        long nextSerial = sequence.getSerialNumber();
 
         // Build a 96-bit (12-byte) EPC as a 24-character uppercase hex string:
         //   Byte  0    : 0x01  – header/version
@@ -132,8 +139,12 @@ public class VehicleServiceImpl implements IVehicleService {
         long safeModelId = vehicleModelId != null ? vehicleModelId & 0xFFFFL : 0L;
         long safeSerial  = nextSerial & 0xFFFFFFL;
 
-        String epc = String.format("01%04X%04X00000000%06X",
+        String epc = String.format("05%04X%04X00000000%06X",
                 safeTypeId, safeModelId, safeSerial);
+
+        // Increment and persist the serial number back to the sequence table
+        sequence.setSerialNumber(nextSerial + 1);
+        vehicleSequenceRepository.save(sequence);
 
         EpcResponse epcResponse = new EpcResponse();
         epcResponse.setEpc(epc);

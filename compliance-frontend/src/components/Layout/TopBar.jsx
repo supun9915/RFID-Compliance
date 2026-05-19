@@ -36,20 +36,12 @@ export function TopBar({ onLogout, onNavigate }) {
   };
 
   return (
-    <header className="h-16 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-10 ml-64">
+    <header className="h-16 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-50 ml-64">
       {/* Left: Search */}
       <div className="flex items-center gap-4">
         <button className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md">
           <Menu className="w-5 h-5" />
         </button>
-        <div className="relative hidden md:block">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search vehicles, owners..."
-            className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent w-64 transition-all"
-          />
-        </div>
       </div>
 
       {/* Right: Actions & Profile */}
@@ -94,7 +86,7 @@ export function TopBar({ onLogout, onNavigate }) {
                 className="fixed inset-0 z-20"
                 onClick={() => setShowProfile(false)}
               />
-              <div className="absolute right-12 top-12 z-30 w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="absolute right-12 top-12 z-[1000] w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
                 {/* Header */}
                 <div className="bg-gray-900 px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">

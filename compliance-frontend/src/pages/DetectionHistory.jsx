@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getDetections } from "../api/detectionsApi";
 import { getScanCenters } from "../api/scanCentersApi";
+import { getUserRole, ROLES } from "../components/Data/Permissions";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,23 +12,23 @@ import {
 
 const STATUSES = [
   { value: "", label: "All Statuses" },
-  { value: "FULLY_COMPLIANT", label: "Fully Compliant" },
+  { value: "VALID", label: "Valid" },
   { value: "NEAR_EXPIRY", label: "Near Expiry" },
-  { value: "NON_COMPLIANT", label: "Non-Compliant" },
+  { value: "EXPIRED", label: "Expired" },
   { value: "UNKNOWN", label: "Unknown" },
 ];
 
 const STATUS_STYLES = {
-  FULLY_COMPLIANT: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-  NON_COMPLIANT: "bg-red-50 text-red-700 border border-red-100",
+  VALID: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+  EXPIRED: "bg-red-50 text-red-700 border border-red-100",
   NEAR_EXPIRY: "bg-amber-50 text-amber-700 border border-amber-100",
   UNKNOWN: "bg-gray-100 text-gray-600 border border-gray-200",
 };
 
 const STATUS_LABELS = {
-  FULLY_COMPLIANT: "Fully Compliant",
+  VALID: "Valid",
   NEAR_EXPIRY: "Near Expiry",
-  NON_COMPLIANT: "Non-Compliant",
+  EXPIRED: "Expired",
   UNKNOWN: "Unknown",
 };
 
@@ -51,19 +52,54 @@ export function DetectionHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [filterScanCenter, setFilterScanCenter] = useState("");
+  const userRole = getUserRole();
+  const isScanCenterRole =
+    userRole === ROLES.SCAN_CENTER_ADMIN || userRole === ROLES.SCAN_CENTER_USER;
+
+  // Derive user's assigned scan center from localStorage profile
+  const assignedScanCenter = React.useMemo(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (!stored) return null;
+      const user = JSON.parse(stored);
+      return user.scanCenter || null;
+    } catch (_) {
+      return null;
+    }
+  }, []);
+
+  const [filterScanCenter, setFilterScanCenter] = useState(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (!stored) return "";
+      const user = JSON.parse(stored);
+      const role = user.role || user.userRole || "";
+      const roleName =
+        typeof role === "object" ? role.name || role.roleName || "" : role;
+      if (
+        (roleName === ROLES.SCAN_CENTER_ADMIN ||
+          roleName === ROLES.SCAN_CENTER_USER) &&
+        user.scanCenter?.id
+      ) {
+        return String(user.scanCenter.id);
+      }
+    } catch (_) {}
+    return "";
+  });
   const [filterStatus, setFilterStatus] = useState("");
   const [filterReader, setFilterReader] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Load scan centers once for the dropdown
+  // Load scan centers for the dropdown (only for roles that can see all)
   useEffect(() => {
-    getScanCenters().then((res) => {
-      if (res.success) setScanCenters(res.data || []);
-    });
-  }, []);
+    if (!isScanCenterRole) {
+      getScanCenters().then((res) => {
+        if (res.success) setScanCenters(res.data || []);
+      });
+    }
+  }, [isScanCenterRole]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -141,18 +177,24 @@ export function DetectionHistory() {
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Scan Center
             </label>
-            <select
-              value={filterScanCenter}
-              onChange={(e) => handleScanCenterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
-            >
-              <option value="">All Scan Centers</option>
-              {scanCenters.map((sc) => (
-                <option key={sc.id} value={sc.id}>
-                  {sc.name}
-                </option>
-              ))}
-            </select>
+            {isScanCenterRole ? (
+              <div className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700">
+                {assignedScanCenter?.name || "Assigned Scan Center"}
+              </div>
+            ) : (
+              <select
+                value={filterScanCenter}
+                onChange={(e) => handleScanCenterChange(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+              >
+                <option value="">All Scan Centers</option>
+                {scanCenters.map((sc) => (
+                  <option key={sc.id} value={sc.id}>
+                    {sc.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Status */}

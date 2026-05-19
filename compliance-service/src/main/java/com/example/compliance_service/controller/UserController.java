@@ -1,13 +1,9 @@
 package com.example.compliance_service.controller;
 
-import com.example.compliance_service.dto.response.VehicleDocumentResponse;
+import com.example.compliance_service.dto.response.*;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
-import com.example.compliance_service.dto.response.ApiResponse;
-import com.example.compliance_service.dto.response.OwnerUserResponse;
-import com.example.compliance_service.dto.response.UserResponse;
-import com.example.compliance_service.dto.response.VehicleUserResponse;
 import com.example.compliance_service.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +34,7 @@ public class UserController {
      * If no params provided, returns all users
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
         if (params.containsKey("role")) {
             List<String> roles = Arrays.stream(params.get("role").toString().split(","))
@@ -66,7 +63,7 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        UserResponse user = userService.getUserByUsername(username);
+        LogUserResponse user = userService.getUserByUsername(username);
         return ResponseEntity.ok(ApiResponse.success("User profile retrieved successfully", user));
     }
 
@@ -128,6 +125,7 @@ public class UserController {
      * POST /api/users/{id}
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         VehicleUserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", user));
@@ -151,7 +149,7 @@ public class UserController {
      * PATCH /api/users/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
@@ -162,7 +160,7 @@ public class UserController {
      * PATCH /api/users/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteUser(@PathVariable Long id) {
         userService.softDeleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User soft-deleted successfully", null));
@@ -174,7 +172,7 @@ public class UserController {
      * PATCH /api/users/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageUserStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {

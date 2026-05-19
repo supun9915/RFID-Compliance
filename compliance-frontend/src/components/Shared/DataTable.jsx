@@ -129,14 +129,16 @@ export function DataTable({
                             <Car className="w-4 h-4 text-indigo-600" />
                           </button>
                         )}
-                        <button
-                          className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-                          title="Edit"
-                          onClick={() => onEdit && onEdit(row)}
-                        >
-                          <Edit2 className="w-4 h-4 text-blue-600" />
-                        </button>
-                        {showDeleteAction && (
+                        {onEdit && (
+                          <button
+                            className="p-1.5 text-gray-400 hover:text-gray-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                            title="Edit"
+                            onClick={() => onEdit(row)}
+                          >
+                            <Edit2 className="w-4 h-4 text-blue-600" />
+                          </button>
+                        )}
+                        {showDeleteAction && onDelete && (
                           <button
                             className="p-1.5 text-gray-400  hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                             title="Delete"
@@ -145,7 +147,7 @@ export function DataTable({
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </button>
                         )}
-                        {showToggleAction && (
+                        {showToggleAction && onToggleStatus && (
                           <button
                             className="p-1.5 text-gray-400 hover:text-gray-900 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                             title={

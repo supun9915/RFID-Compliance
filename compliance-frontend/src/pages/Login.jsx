@@ -30,24 +30,41 @@ export function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: "url('/LoginLogo.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/85 via-gray-950/90 to-gray-900/85 opacity-60" />
+
       {/* Card */}
-      <div className="w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-900 shadow-lg mb-4">
-            <ShieldCheck className="w-9 h-9 text-white" />
+          <div className="w-24 h-24 rounded-lg bg-white flex items-center justify-center overflow-hidden mx-auto">
+            <img
+              src="/Logo65.png"
+              alt="Logo"
+              className="w-full p-0.5 h-full object-contain"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            AutoComply
-          </h1>
-          <p className="text-gray-400 mt-1 text-sm">
-            RFID Compliance Management System
-          </p>
+          <div className="mt-5">
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              AutoComply
+            </h1>
+            <p className="text-gray-400 mt-1 text-sm">
+              RFID Compliance Management System
+            </p>
+          </div>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8 shadow-2xl">
           <h2 className="text-lg font-semibold text-white mb-6">
             Sign in to your account
           </h2>

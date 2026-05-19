@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Proxy all /autocomply requests to the backend to avoid CORS in dev
       "/autocomply": {
-        target: "http://localhost:29288",
+        target: "http://localhost:29289",
         changeOrigin: true,
         secure: false,
       },

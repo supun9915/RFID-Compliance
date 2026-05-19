@@ -10,6 +10,7 @@ import {
 import { X } from "lucide-react";
 import { ApiResponsePopup } from "../components/Shared/ApiResponsePopup";
 import { notifyResponse } from "../utils/responseNotifier";
+import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
 
 export function DocumentTypes() {
   const [data, setData] = useState([]);
@@ -242,16 +243,20 @@ export function DocumentTypes() {
     );
   }
 
+  const userCanManage = canManage(getUserRole(), PAGES.DOCUMENT_TYPE);
+
   return (
     <>
       <DataTable
         title="Document Types"
         columns={columns}
         data={data}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
+        onAdd={userCanManage ? handleAdd : undefined}
+        onEdit={userCanManage ? handleEdit : undefined}
+        onDelete={userCanManage ? handleDelete : undefined}
+        onToggleStatus={userCanManage ? handleToggleStatus : undefined}
+        showAddButton={userCanManage}
+        showActions={userCanManage}
       />
 
       {showModal && (

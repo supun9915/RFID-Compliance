@@ -3,10 +3,7 @@ package com.example.compliance_service.service;
 import com.example.compliance_service.dto.request.RegisterRequest;
 import com.example.compliance_service.dto.request.UpdateUserRequest;
 import com.example.compliance_service.dto.request.VehicleOwnerRequest;
-import com.example.compliance_service.dto.response.OwnerUserResponse;
-import com.example.compliance_service.dto.response.UserResponse;
-import com.example.compliance_service.dto.response.VehicleDocumentResponse;
-import com.example.compliance_service.dto.response.VehicleUserResponse;
+import com.example.compliance_service.dto.response.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -32,11 +29,19 @@ public interface IUserService {
     List<OwnerUserResponse> getOwnerUsers(Map<String, Object> params);
 
     /**
+     * Search owners by vehicle number, registration number, owner name, or NIC.
+     * Returns full owner + vehicles + documents data for each matching owner.
+     * @param query search term
+     * @return List of matching owners with vehicle and document details
+     */
+    List<VehicleUserResponse> searchVehicles(String query);
+
+    /**
      * Get user by username
      * @param username Username
      * @return User details
      */
-    UserResponse getUserByUsername(String username);
+    LogUserResponse getUserByUsername(String username);
 
     /**
      * Create a new user

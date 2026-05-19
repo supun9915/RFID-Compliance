@@ -34,7 +34,7 @@ import { getDocumentTypes } from "../../api/documentTypesApi";
 const toDateInput = (iso) => (iso ? iso.slice(0, 10) : "");
 
 const inputClass =
-  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white";
+  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white";
 const inputErrorClass =
   "w-full border border-red-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 bg-white";
 const labelClass = "block text-xs font-semibold text-gray-600 mb-1";
@@ -128,8 +128,8 @@ function OwnerProfileCard({ owner, vehicles = [] }) {
     {
       label: "Vehicles",
       value: vehicles.length,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
+      color: "text-blue-900",
+      bg: "bg-blue-50",
     },
     {
       label: "Documents",
@@ -148,7 +148,7 @@ function OwnerProfileCard({ owner, vehicles = [] }) {
   return (
     <div className="flex items-center gap-6 flex-1 min-w-0">
       {/* Avatar */}
-      <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-lg font-bold shrink-0">
+      <div className="w-14 h-14 rounded-2xl bg-blue-950 flex items-center justify-center text-white text-lg font-bold shrink-0">
         {initials || <User className="w-6 h-6" />}
       </div>
 
@@ -158,7 +158,7 @@ function OwnerProfileCard({ owner, vehicles = [] }) {
           <h2 className="text-base font-bold text-gray-900">
             {owner.firstName} {owner.lastName}
           </h2>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-900 border border-blue-100">
             {owner.role?.name || "OWNER"}
           </span>
         </div>
@@ -213,8 +213,8 @@ function VehicleCard({ vehicle, selected, onSelect, onEdit, onDelete }) {
       onClick={() => onSelect(vehicle)}
       className={`rounded-xl border cursor-pointer transition-all ${
         selected
-          ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100"
-          : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm"
+          ? "border-blue-500 bg-blue-50 shadow-md shadow-blue-100"
+          : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm"
       }`}
     >
       <div className="p-4">
@@ -222,7 +222,7 @@ function VehicleCard({ vehicle, selected, onSelect, onEdit, onDelete }) {
           <div className="flex items-center gap-3 min-w-0">
             <div
               className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                selected ? "bg-indigo-600" : "bg-gray-100"
+                selected ? "bg-blue-900" : "bg-gray-100"
               }`}
             >
               <Car
@@ -327,7 +327,7 @@ function VehicleDetailPanel({ vehicle }) {
     <div className="h-full flex flex-col">
       <div className="pb-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-blue-950 flex items-center justify-center">
             <Car className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -374,8 +374,8 @@ function VehicleDetailPanel({ vehicle }) {
                 key={doc.id}
                 className="bg-white border border-gray-200 rounded-xl p-3.5 flex items-start gap-3"
               >
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-indigo-500" />
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -817,7 +817,7 @@ function VehicleFormPanel({
                             endDate: "",
                           })
                         }
-                        className="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium px-3 py-2 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors w-full justify-center"
+                        className="flex items-center gap-2 text-xs text-blue-900 hover:text-gray-800 font-medium px-3 py-2 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors w-full justify-center"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         Add Another Document
@@ -845,7 +845,7 @@ function VehicleFormPanel({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+                  className="px-5 py-2 bg-blue-950 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-60 transition-colors"
                 >
                   {isSubmitting
                     ? "Saving..."
@@ -1005,7 +1005,7 @@ export function OwnerVehiclesPage({ owner, onBack }) {
               setSelectedVehicle(null);
               setFormMode("add");
             }}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 bg-blue-950 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Vehicle
@@ -1043,7 +1043,7 @@ export function OwnerVehiclesPage({ owner, onBack }) {
                 <p className="text-sm font-bold text-gray-800 p-1">
                   Vehicles
                   {vehicles.length > 0 && (
-                    <span className="ml-2 text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5">
+                    <span className="ml-2 text-xs font-semibold text-blue-900 bg-blue-50 rounded-full px-2 py-0.5">
                       {vehicles.length}
                     </span>
                   )}

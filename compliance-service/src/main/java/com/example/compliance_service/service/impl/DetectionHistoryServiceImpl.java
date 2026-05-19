@@ -9,6 +9,7 @@ import com.example.compliance_service.entity.*;
 import com.example.compliance_service.exception.ResourceNotFoundException;
 import com.example.compliance_service.repository.*;
 import com.example.compliance_service.service.IDetectionHistoryService;
+import com.example.compliance_service.service.IEmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,6 +34,8 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
     private final VehicleRepository vehicleRepository;
     private final ReaderRepository readerRepository;
     private final DocumentRepository documentRepository;
+    private final UserRepository userRepository;
+    private final IEmailService emailService;
 
     // ── Record Detection ───────────────────────────────────────────────────────
 
@@ -98,7 +102,32 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
 
         DetectionHistory saved = detectionHistoryRepository.save(detectionHistory);
 
-        // 10. Map to response
+        // 10. Trigger email notifications based on compliance status
+        // Check for expired/missing and near-expiry independently so that both emails
+        // are sent when a vehicle has documents in both states simultaneously.
+        boolean hasExpiredOrMissing = validationResults.stream()
+                .anyMatch(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()));
+        boolean hasNearExpiry = validationResults.stream()
+                .anyMatch(r -> "NEAR_EXPIRY".equals(r.getStatus()));
+
+        if (hasExpiredOrMissing) {
+            List<User> scanCenterUsers = scanCenter != null
+                    ? userRepository.findByScanCenter_IdAndDeletedFalse(scanCenter.getId())
+                    : Collections.emptyList();
+            List<DetectionHistoryResponse.DocumentValidationResult> expiredResults = validationResults.stream()
+                    .filter(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()))
+                    .collect(Collectors.toList());
+            emailService.sendDocumentExpiredNotification(vehicle, owner, scanCenter, expiredResults, scanCenterUsers);
+        }
+
+        if (hasNearExpiry) {
+            List<DetectionHistoryResponse.DocumentValidationResult> nearExpiryResults = validationResults.stream()
+                    .filter(r -> "NEAR_EXPIRY".equals(r.getStatus()))
+                    .collect(Collectors.toList());
+            emailService.sendDocumentNearExpiryNotification(vehicle, owner, nearExpiryResults);
+        }
+
+        // 11. Map to response
         return mapToResponse(saved, validationResults);
     }
 
@@ -271,14 +300,14 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
         boolean hasExpiredOrMissing = results.stream()
                 .anyMatch(r -> "EXPIRED".equals(r.getStatus()) || "MISSING".equals(r.getStatus()));
         if (hasExpiredOrMissing) {
-            return EComplianceStatus.NON_COMPLIANT;
+            return EComplianceStatus.EXPIRED;
         }
         boolean hasNearExpiry = results.stream()
                 .anyMatch(r -> "NEAR_EXPIRY".equals(r.getStatus()));
         if (hasNearExpiry) {
             return EComplianceStatus.NEAR_EXPIRY;
         }
-        return EComplianceStatus.FULLY_COMPLIANT;
+        return EComplianceStatus.VALID;
     }
 
     /**
@@ -338,9 +367,9 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
         // Append a one-line overall verdict
         String verdict;
         switch (status) {
-            case FULLY_COMPLIANT: verdict = "All documents valid.";           break;
+            case VALID: verdict = "All documents valid.";           break;
             case NEAR_EXPIRY:     verdict = "Some documents expiring soon.";  break;
-            case NON_COMPLIANT:   verdict = "Action required.";               break;
+            case EXPIRED:   verdict = "Action required.";               break;
             default:              verdict = "Status unknown.";                break;
         }
 

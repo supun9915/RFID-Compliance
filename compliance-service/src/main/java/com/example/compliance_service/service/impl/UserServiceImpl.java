@@ -106,6 +106,30 @@ public class UserServiceImpl implements IUserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<VehicleUserResponse> searchVehicles(String query) {
+        String q = "%" + query.toLowerCase().trim() + "%";
+
+        // Find vehicles matching vehicle number or registration number
+        List<Vehicle> vehicleMatches = vehicleRepository.searchByVehicleNumberOrRegistration(q);
+
+        // Collect unique owner IDs from vehicle matches (preserve insertion order)
+        java.util.Set<Long> ownerIds = new java.util.LinkedHashSet<>();
+        vehicleMatches.stream()
+                .filter(v -> v.getOwner() != null)
+                .map(v -> v.getOwner().getId())
+                .forEach(ownerIds::add);
+
+        // Also find owners matching by name or NIC
+        List<User> ownerMatches = userRepository.searchOwnersByNameOrNic(q);
+        ownerMatches.stream().map(User::getId).forEach(ownerIds::add);
+
+        // Return full owner + vehicle + document data for each matched owner
+        return ownerIds.stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
+
     private OwnerUserResponse mapToOwnerUserResponse(User user) {
         List<Vehicle> vehicles = vehicleRepository.findByOwnerId(user.getId());
         List<OwnerVehicleResponse> vehicleResponses = vehicles.stream()
@@ -210,10 +234,52 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserResponse getUserByUsername(String username) {
+    public LogUserResponse getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-        return mapToUserResponse(user);
+
+        RoleResponse roleResponse = user.getRole() != null
+                ? RoleResponse.builder()
+                        .id(user.getRole().getId())
+                        .name(user.getRole().getName())
+                        .description(user.getRole().getDescription())
+                        .active(user.getRole().getActive())
+                        .deleted(user.getRole().getDeleted())
+                        .build()
+                : null;
+
+        ScanCenterResponse scanCenterResponse = null;
+        if (user.getScanCenter() != null) {
+            scanCenterResponse = ScanCenterResponse.builder()
+                    .id(user.getScanCenter().getId())
+                    .name(user.getScanCenter().getName())
+                    .city(user.getScanCenter().getCity())
+                    .district(user.getScanCenter().getDistrict())
+                    .province(user.getScanCenter().getProvince())
+                    .isActive(user.getScanCenter().getIsActive())
+                    .deleted(user.getScanCenter().getDeleted())
+                    .createdAt(user.getScanCenter().getCreatedAt())
+                    .updatedAt(user.getScanCenter().getUpdatedAt())
+                    .build();
+        }
+
+        return LogUserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .contactNumber(user.getContactNumber())
+                .nic(user.getNic())
+                .district(user.getDistrict())
+                .province(user.getProvince())
+                .active(user.getActive())
+                .deleted(user.getDeleted())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .role(roleResponse)
+                .scanCenter(scanCenterResponse)
+                .build();
     }
 
     @Override
@@ -1039,7 +1105,7 @@ public class UserServiceImpl implements IUserService {
         long safeModelId = vehicleModelId != null ? vehicleModelId & 0xFFFFL : 0L;
         long safeSerial  = nextSerial & 0xFFFFFFL;
 
-        String epc = String.format("01%04X%04X00000000%06X",
+        String epc = String.format("05%04X%04X00000000%06X",
                 safeTypeId, safeModelId, safeSerial);
 
         EpcResponse epcResponse = new EpcResponse();

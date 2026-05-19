@@ -10,6 +10,7 @@ import {
   updateUserStatus,
 } from "../api/usersApi";
 import { getScanCenters } from "../api/scanCentersApi";
+import { canManage, PAGES, getUserRole } from "../components/Data/Permissions";
 
 const ADMIN_ROLE_NAMES = [
   "SYSTEM_ADMIN",
@@ -299,6 +300,7 @@ export function AdminUsers() {
 
     const payload = {
       username: form.username.trim(),
+      password: form.password.trim(),
       email: form.email.trim(),
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
@@ -364,16 +366,20 @@ export function AdminUsers() {
     );
   }
 
+  const userCanManage = canManage(getUserRole(), PAGES.ADMIN_USERS);
+
   return (
     <>
       <DataTable
         title="System Users"
         columns={columns}
         data={tableData}
-        onAdd={openCreateModal}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
+        onAdd={userCanManage ? openCreateModal : undefined}
+        onEdit={userCanManage ? openEditModal : undefined}
+        onDelete={userCanManage ? handleDelete : undefined}
+        onToggleStatus={userCanManage ? handleToggleStatus : undefined}
+        showAddButton={userCanManage}
+        showActions={userCanManage}
       />
 
       {modalOpen && (

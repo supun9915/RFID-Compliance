@@ -1,8 +1,10 @@
 package com.example.compliance_service.controller;
 
 import com.example.compliance_service.dto.request.ReadersRequest;
+import com.example.compliance_service.dto.request.ReaderCommandRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.ReaderResponse;
+import com.example.compliance_service.dto.response.ReaderCommandResponse;
 import com.example.compliance_service.service.IReaderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,7 @@ public class ReaderController {
      * PATCH /api/readers/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageReaderStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {
@@ -78,7 +80,7 @@ public class ReaderController {
      * POST /api/readers/scan-center/{scanCenterId}
      */
     @PostMapping("/scan-center/{scanCenterId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> createReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @Valid @RequestBody ReadersRequest request) {
@@ -93,7 +95,7 @@ public class ReaderController {
      * PUT /api/readers/scan-center/{scanCenterId}/{readerId}
      */
     @PutMapping("/scan-center/{scanCenterId}/{readerId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> updateReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @PathVariable Long readerId,
@@ -107,11 +109,30 @@ public class ReaderController {
      * DELETE /api/readers/scan-center/{scanCenterId}/{readerId}
      */
     @DeleteMapping("/scan-center/{scanCenterId}/{readerId}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
     public ResponseEntity<?> deleteReaderForScanCenter(
             @PathVariable Long scanCenterId,
             @PathVariable Long readerId) {
         readerService.deleteReaderForScanCenter(scanCenterId, readerId);
         return ResponseEntity.ok(ApiResponse.success("Reader deleted successfully", null));
+    }
+
+    /**
+     * Send a start or stop command to a reader via MQTT.
+     * POST /api/readers/{readerId}/command
+     *
+     * Request body:
+     * {
+     *   "commandId": "abcd1234",
+     *   "command":   "start" | "stop"
+     * }
+     */
+    @PostMapping("/{readerId}/command")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'SCAN_CENTER_ADMIN')")
+    public ResponseEntity<?> sendReaderCommand(
+            @PathVariable Long readerId,
+            @Valid @RequestBody ReaderCommandRequest request) {
+        ReaderCommandResponse response = readerService.sendReaderCommand(readerId, request);
+        return ResponseEntity.ok(ApiResponse.success("Reader command processed", response));
     }
 }

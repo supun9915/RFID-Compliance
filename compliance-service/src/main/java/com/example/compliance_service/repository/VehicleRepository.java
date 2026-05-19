@@ -43,6 +43,16 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     Optional<Vehicle> findByIdAndOwnerId(Long id, Long ownerId);
 
+    Optional<Vehicle> findByVehicleNumber(String vehicleNumber);
+
+    /**
+     * Search active vehicles by vehicle number or registration number (case-insensitive LIKE).
+     * Only returns vehicles that have an owner assigned.
+     */
+    @Query("SELECT v FROM Vehicle v WHERE v.owner IS NOT NULL AND v.active = true AND " +
+           "(LOWER(v.vehicleNumber) LIKE :q OR LOWER(v.registrationNumber) LIKE :q)")
+    List<Vehicle> searchByVehicleNumberOrRegistration(@Param("q") String q);
+
     /**
      * Find an inactive vehicle with no owner that matches any of the given identifiers.
      * Used to recycle a previously detached vehicle instead of creating a new one.

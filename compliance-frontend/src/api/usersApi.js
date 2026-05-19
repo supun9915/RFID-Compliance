@@ -24,6 +24,28 @@ export const getUsers = async () => {
 };
 
 /**
+ * Fetch currently authenticated user profile.
+ * @returns {Promise<{ success: boolean, data?: object, message: string }>}
+ */
+export const getCurrentUser = async () => {
+  const response = await request("/users/me", GET);
+
+  if (!response || response.error) {
+    const message =
+      response?.error?.response?.data?.message ||
+      response?.error?.message ||
+      "Failed to fetch current user";
+    return { success: false, message };
+  }
+
+  return {
+    success: response.success !== false,
+    data: response.data,
+    message: response.message,
+  };
+};
+
+/**
  * Create a new user.
  * @param {{ username, email, password, firstName, lastName, contactNumber, nic, district, province, roleId, scanCenterId }} userData
  * @returns {Promise<{ success: boolean, data: object, message: string }>}

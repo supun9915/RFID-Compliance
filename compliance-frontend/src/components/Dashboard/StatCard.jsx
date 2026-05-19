@@ -1,10 +1,11 @@
 import React from "react";
 export function StatCard({ title, value, trend, trendUp, icon: Icon, color }) {
   const colorStyles = {
-    blue: "bg-gray-50 text-gray-600",
-    red: "bg-red-50 text-red-600",
-    green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
+    blue: "bg-gradient-to-br from-blue-400 to-blue-600 text-white",
+    red: "bg-gradient-to-br from-red-400 to-red-600 text-white",
+    green: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white",
+    amber: "bg-gradient-to-br from-amber-400 to-amber-600 text-white",
+    purple: "bg-gradient-to-br from-purple-400 to-purple-600 text-white",
   };
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">

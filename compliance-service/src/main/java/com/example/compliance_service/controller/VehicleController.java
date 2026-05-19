@@ -3,6 +3,7 @@ package com.example.compliance_service.controller;
 import com.example.compliance_service.dto.request.VehicleRequest;
 import com.example.compliance_service.dto.response.ApiResponse;
 import com.example.compliance_service.dto.response.VehicleResponse;
+import com.example.compliance_service.service.IUserService;
 import com.example.compliance_service.service.IVehicleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 public class VehicleController {
 
     private final IVehicleService vehicleService;
+    private final IUserService userService;
 
     /**
      * Get all vehicles
@@ -71,11 +73,26 @@ public class VehicleController {
     }
 
     /**
+     * Search vehicles by vehicle number, registration number, owner name, or NIC.
+     * GET /api/vehicles/search?q={query}
+     */
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    public ResponseEntity<?> searchVehicles(@RequestParam String q) {
+        if (q == null || q.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Search query must not be empty"));
+        }
+        return ResponseEntity.ok(
+                ApiResponse.success("Search completed", userService.searchVehicles(q)));
+    }
+
+    /**
      * Create a new vehicle (Admin only)
      * POST /api/vehicles
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> createVehicle(@Valid @RequestBody VehicleRequest request) {
         VehicleResponse vehicle = vehicleService.createVehicle(request);
         return ResponseEntity
@@ -88,7 +105,7 @@ public class VehicleController {
      * PUT /api/vehicles/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN', 'OWNER')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER')")
     public ResponseEntity<?> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest request) {
@@ -101,7 +118,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}/delete
      */
     @PatchMapping("/{id}/delete")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
         vehicleService.deleteVehicle(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle deleted successfully", null));
@@ -112,7 +129,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> softDeleteVehicle(@PathVariable Long id) {
         vehicleService.softDeleteVehicle(id);
         return ResponseEntity.ok(ApiResponse.success("Vehicle soft-deleted successfully", null));
@@ -124,7 +141,7 @@ public class VehicleController {
      * PATCH /api/vehicles/{id}/status?active=false → deactivate
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> manageVehicleStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {
