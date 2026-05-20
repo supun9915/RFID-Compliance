@@ -43,7 +43,7 @@ public class MqttDetectionListener implements MessageHandler {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
     /** EPC prefix that identifies managed vehicle tags */
-    private static final String VALID_EPC_PREFIX = "05";
+    private static final String VALID_EPC_PREFIX = "37";
 
     /**
      * Invoked by Spring Integration for every MQTT message arriving on
@@ -195,7 +195,7 @@ public class MqttDetectionListener implements MessageHandler {
         String model        = reader.getModel() != null ? reader.getModel().toLowerCase() : "fx9600";
 
         String topic = mqttCommandPublisher.buildCommandTopic(model, serialNumber);
-        int port = isNonCompliant ? 2 : 1;
+        int port = isNonCompliant ? 1 : 2;
         String commandId = "abcd1324";
 
         // Send ON

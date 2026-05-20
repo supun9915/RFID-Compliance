@@ -34,7 +34,6 @@ public class UserController {
      * If no params provided, returns all users
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUsers(@RequestParam Map<String, Object> params) {
         if (params.containsKey("role")) {
             List<String> roles = Arrays.stream(params.get("role").toString().split(","))
@@ -125,7 +124,6 @@ public class UserController {
      * POST /api/users/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         VehicleUserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", user));

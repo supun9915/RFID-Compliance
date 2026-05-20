@@ -19,6 +19,7 @@ public class DetectionHistoryResponse {
     // Vehicle info
     private Long vehicleId;
     private String vehicleRegistrationNumber;
+    private String vehicleNumber;
     private String vehicleEpc;
     private VehicleTypeResponse vehicleType;
     private VehicleModelResponse vehicleModel;

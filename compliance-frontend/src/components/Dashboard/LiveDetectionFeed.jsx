@@ -1,7 +1,5 @@
 import React from "react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,73 +9,43 @@ import {
   AreaChart,
 } from "recharts";
 import { Radio, MapPin, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-const data = [
-  {
-    time: "08:00",
-    detections: 120,
-  },
-  {
-    time: "09:00",
-    detections: 240,
-  },
-  {
-    time: "10:00",
-    detections: 450,
-  },
-  {
-    time: "11:00",
-    detections: 380,
-  },
-  {
-    time: "12:00",
-    detections: 310,
-  },
-  {
-    time: "13:00",
-    detections: 290,
-  },
-  {
-    time: "14:00",
-    detections: 410,
-  },
-];
 
-const recentScans = [
-  {
-    id: 1,
-    epc: "E200-3412-DC12",
-    reg: "ABC-1234",
-    loc: "North Gate",
-    status: "Valid",
-    time: "14:32:01",
-  },
-  {
-    id: 2,
-    epc: "E200-9821-AA01",
-    reg: "XYZ-5678",
-    loc: "Main Hwy",
-    status: "Expired",
-    time: "14:31:45",
-  },
-  {
-    id: 3,
-    epc: "E200-4567-BB22",
-    reg: "LMN-9012",
-    loc: "South Exit",
-    status: "Valid",
-    time: "14:31:12",
-  },
-  {
-    id: 4,
-    epc: "E200-1122-CC33",
-    reg: "QWE-3456",
-    loc: "North Gate",
-    status: "Warning",
-    time: "14:30:55",
-  },
-];
+export function LiveDetectionFeed({ detections = [] }) {
+  // Group detections by hour for the chart
+  const chartData = React.useMemo(() => {
+    const hourMap = {};
+    detections.forEach((d) => {
+      const hour = new Date(d.createdAt).getHours();
+      const key = `${String(hour).padStart(2, "0")}:00`;
+      hourMap[key] = (hourMap[key] || 0) + 1;
+    });
+    return Object.entries(hourMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([time, count]) => ({ time, detections: count }));
+  }, [detections]);
 
-export function LiveDetectionFeed() {
+  // Latest 10 scans
+  const recentScans = React.useMemo(() => {
+    return [...detections]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+      .map((d) => ({
+        id: d.id,
+        reg: d.vehicleNumber,
+        loc: d.scanCenterName,
+        status:
+          d.complianceStatus === "VALID"
+            ? "Valid"
+            : d.complianceStatus === "EXPIRED"
+              ? "Expired"
+              : "Warning",
+        time: new Date(d.createdAt).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      }));
+  }, [detections]);
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
@@ -104,7 +72,7 @@ export function LiveDetectionFeed() {
       {/* Chart Section */}
       <div className="h-48 mb-6 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorDetections" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1} />

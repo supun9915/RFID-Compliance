@@ -393,6 +393,7 @@ public class DetectionHistoryServiceImpl implements IDetectionHistoryService {
                 .id(h.getId())
                 .vehicleId(vehicle != null ? vehicle.getId() : null)
                 .vehicleRegistrationNumber(vehicle != null ? vehicle.getRegistrationNumber() : null)
+                .vehicleNumber(vehicle != null ? vehicle.getVehicleNumber() : null)
                 .vehicleEpc(vehicle != null ? vehicle.getEpc() : null)
                 .vehicleType(vehicle != null && vehicle.getVehicleType() != null
                         ? VehicleTypeResponse.builder()

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import {
   AlertTriangle,
   Clock,
@@ -9,15 +9,32 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-export function ComplianceAlerts({ detections = [], loading = false }) {
+export function ComplianceAlerts({
+  detections = [],
+  loading = false,
+  dateFilter = "today",
+  customStartDate = "",
+  customEndDate = "",
+  onDateFilterChange = () => {},
+  onCustomStartDateChange = () => {},
+  onCustomEndDateChange = () => {},
+}) {
   const documentOrder = ["revenuelicense", "insurance", "emissiontest"];
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [dateFilter, setDateFilter] = useState("today");
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
   const itemsPerPage = 10;
+
+  // Stabilize the detections reference — only update when IDs actually change,
+  // preventing the filtered list from recomputing on every background poll.
+  const prevDetectionsRef = useRef({ sig: "", data: detections });
+  const stableDetections = useMemo(() => {
+    const sig = detections.map((d) => d.id).join(",");
+    if (sig === prevDetectionsRef.current.sig)
+      return prevDetectionsRef.current.data;
+    prevDetectionsRef.current = { sig, data: detections };
+    return detections;
+  }, [detections]);
 
   // Filter detections by selected date window and always keep latest alerts first.
   const filteredDetections = useMemo(() => {
@@ -49,7 +66,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
       customEndExclusive.setDate(customEndExclusive.getDate() + 1);
     }
 
-    return [...detections]
+    return [...stableDetections]
       .sort((a, b) => {
         const aTime = new Date(a.createdAt || 0).getTime();
         const bTime = new Date(b.createdAt || 0).getTime();
@@ -87,7 +104,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
 
         return true;
       });
-  }, [detections, dateFilter, customStartDate, customEndDate]);
+  }, [stableDetections, dateFilter, customStartDate, customEndDate]);
 
   // Format detection time
   const formatDetectionTime = (timestamp) => {
@@ -205,7 +222,11 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
   );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentDetections = filteredDetections.slice(startIndex, endIndex);
+  // Memoize current page slice to avoid re-renders when nothing changed
+  const currentDetections = useMemo(
+    () => filteredDetections.slice(startIndex, endIndex),
+    [filteredDetections, startIndex, endIndex],
+  );
 
   // Reset to page 1 when detections change
   React.useEffect(() => {
@@ -228,7 +249,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
             <div className="min-w-[180px]">
               <select
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(e) => onDateFilterChange(e.target.value)}
                 className="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 <option value="today">Today</option>
@@ -247,7 +268,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                   <input
                     type="date"
                     value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    onChange={(e) => onCustomStartDateChange(e.target.value)}
                     className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                   />
                 </div>
@@ -258,7 +279,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                   <input
                     type="date"
                     value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    onChange={(e) => onCustomEndDateChange(e.target.value)}
                     className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                   />
                 </div>
@@ -301,7 +322,7 @@ export function ComplianceAlerts({ detections = [], loading = false }) {
                     <div className="flex-shrink-0 min-w-[260px]">
                       <div className="flex items-center w-full gap-3">
                         <h4 className="font-semibold text-gray-900 text-base">
-                          {detection.vehicleRegistrationNumber}
+                          {detection.vehicleNumber}
                         </h4>
                         <div
                           className={`w-24 ml-auto inline-flex justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(detection.complianceStatus)}`}

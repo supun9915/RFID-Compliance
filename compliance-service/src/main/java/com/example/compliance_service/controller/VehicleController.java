@@ -77,7 +77,7 @@ public class VehicleController {
      * GET /api/vehicles/search?q={query}
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'SYSTEM_ADMIN', 'ADMIN', 'OWNER', 'SCAN_CENTER_ADMIN', 'SCAN_CENTER_USER')")
     public ResponseEntity<?> searchVehicles(@RequestParam String q) {
         if (q == null || q.trim().isEmpty()) {
             return ResponseEntity.badRequest()
