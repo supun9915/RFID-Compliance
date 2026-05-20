@@ -13,6 +13,7 @@ import {
   Printer,
   Settings,
   Search,
+  KeyRound,
 } from "lucide-react";
 import { canView, PAGES, getUserRole } from "../Data/Permissions";
 
@@ -143,6 +144,15 @@ export function Sidebar({ activePage, onNavigate }) {
           >
             <Settings className="w-5 h-5" />
             Printer Settings
+          </button>
+        )}
+        {canView(userRole, PAGES.API_TOKENS) && (
+          <button
+            onClick={() => onNavigate("apiTokens")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activePage === "apiTokens" ? "bg-gray-200 text-gray-900 shadow-lg shadow-gray-900/20" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+          >
+            <KeyRound className="w-5 h-5" />
+            API Tokens
           </button>
         )}
       </nav>

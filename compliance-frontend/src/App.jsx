@@ -17,6 +17,7 @@ import { Login } from "./pages/Login";
 import { VehiclePrint } from "./pages/VehiclePrint";
 import { PrinterSettings } from "./pages/PrinterSettings";
 import { VehicleSearch } from "./pages/VehicleSearch";
+import { ApiTokens } from "./pages/ApiTokens";
 import { isAuthenticated } from "./api/authApi";
 import { ApiResponsePopup } from "./components/Shared/ApiResponsePopup";
 import { subscribeToResponseNotifications } from "./utils/responseNotifier";
@@ -129,6 +130,8 @@ export function App() {
         return <Settings />;
       case "account":
         return guard(PAGES.ACCOUNT, <Account />);
+      case "apiTokens":
+        return guard(PAGES.API_TOKENS, <ApiTokens />);
       default:
         return <Dashboard />;
     }

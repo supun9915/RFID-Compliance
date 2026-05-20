@@ -41,9 +41,15 @@ export const PAGES = {
   VEHICLE: "Vehicle",
   VEHICLE_PRINT: "Vehicle Print",
   PRINTER_SETTINGS: "Printer Settings",
+  API_TOKENS: "API Tokens",
 };
 
 export const permissions = {
+  [PAGES.API_TOKENS]: {
+    view: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN],
+    manage: [ROLES.SUPER_ADMIN, ROLES.SYSTEM_ADMIN],
+  },
+
   [PAGES.DASHBOARD]: {
     view: [
       ROLES.SUPER_ADMIN,
