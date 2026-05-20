@@ -57,6 +57,12 @@ export function Sidebar({ activePage, onNavigate }) {
       page: PAGES.OWNERS,
     },
     {
+      id: "myVehicles",
+      icon: Car,
+      label: "My Vehicles",
+      page: PAGES.VEHICLE,
+    },
+    {
       id: "vehicleSearch",
       icon: Search,
       label: "Vehicle Search",

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StatCard } from "../components/Dashboard/StatCard";
 import { ComplianceAlerts } from "../components/Dashboard/ComplianceAlerts";
 import { LiveDetectionFeed } from "../components/Dashboard/LiveDetectionFeed";
-import { Car, FileWarning, Radio, AlertOctagon } from "lucide-react";
+import { Car, FileWarning, Radio, AlertOctagon, RefreshCw } from "lucide-react";
 import { getScanCenters } from "../api/scanCentersApi";
 import { getDetections } from "../api/detectionsApi";
 import { getUserRole, ROLES } from "../components/Data/Permissions";
@@ -13,6 +13,7 @@ export function Dashboard() {
   const [selectedScanCenter, setSelectedScanCenter] = useState("");
   const [detections, setDetections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const userRole = getUserRole();
   const isScanCenterRole =
@@ -46,36 +47,42 @@ export function Dashboard() {
   }, [userProfile]);
 
   // Fetch detections based on selected scan center or user's assigned scan center
+  const fetchDetections = async () => {
+    if (!userProfile) return;
+
+    setLoading(true);
+    const params = {};
+
+    // If user has an assigned scan center, use it
+    if (userProfile.scanCenter && userProfile.scanCenter.id) {
+      params.scanCenterId = userProfile.scanCenter.id;
+    }
+    // Otherwise, use the selected scan center from dropdown (if any)
+    else if (selectedScanCenter) {
+      params.scanCenterId = selectedScanCenter;
+    }
+    // If no scan center selected and user has no assigned scan center, fetch all
+
+    const response = await getDetections(params);
+    if (response.success) {
+      setDetections(response.data);
+    }
+    setLoading(false);
+  };
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    await fetchDetections();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
-    const fetchDetections = async () => {
-      if (!userProfile) return;
-
-      setLoading(true);
-      const params = {};
-
-      // If user has an assigned scan center, use it
-      if (userProfile.scanCenter && userProfile.scanCenter.id) {
-        params.scanCenterId = userProfile.scanCenter.id;
-      }
-      // Otherwise, use the selected scan center from dropdown (if any)
-      else if (selectedScanCenter) {
-        params.scanCenterId = selectedScanCenter;
-      }
-      // If no scan center selected and user has no assigned scan center, fetch all
-
-      const response = await getDetections(params);
-      if (response.success) {
-        setDetections(response.data);
-      }
-      setLoading(false);
-    };
-
     fetchDetections();
 
-    // Auto-refresh every 10 seconds
+    // Auto-refresh every 5 seconds
     const intervalId = setInterval(() => {
       fetchDetections();
-    }, 1000000);
+    }, 100000); // 100000 ms = 100 seconds
 
     // Cleanup interval on component unmount or when dependencies change
     return () => clearInterval(intervalId);
@@ -136,6 +143,22 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column: Compliance Alerts Table (Takes up 4/5 width) */}
         <div className="lg:col-span-4 h-[700px]">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base font-semibold text-gray-800">
+              Compliance Alerts
+            </h2>
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm px-3 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+            >
+              <RefreshCw
+                size={14}
+                className={refreshing ? "animate-spin" : ""}
+              />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
           <ComplianceAlerts detections={detections} loading={loading} />
         </div>
 

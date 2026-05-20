@@ -238,30 +238,36 @@ function VehicleCard({ vehicle, selected, onSelect, onEdit, onDelete }) {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(vehicle);
-              }}
-              className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-              title="Edit Vehicle"
-            >
-              <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(vehicle);
-              }}
-              className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-              title="Remove Vehicle"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-red-500" />
-            </button>
-          </div>
+          {(onEdit || onDelete) && (
+            <div className="flex items-center gap-1 shrink-0">
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(vehicle);
+                  }}
+                  className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  title="Edit Vehicle"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(vehicle);
+                  }}
+                  className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  title="Remove Vehicle"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -863,7 +869,7 @@ function VehicleFormPanel({
 }
 
 /* ─── Main Page ─────────────────────────────────────────────── */
-export function OwnerVehiclesPage({ owner, onBack }) {
+export function OwnerVehiclesPage({ owner, onBack, readOnly = false }) {
   const [ownerData, setOwnerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -949,7 +955,7 @@ export function OwnerVehiclesPage({ owner, onBack }) {
   };
 
   const rightPanelContent = () => {
-    if (formMode === "add" || formMode === "edit") {
+    if (!readOnly && (formMode === "add" || formMode === "edit")) {
       return (
         <VehicleFormPanel
           owner={owner}
@@ -985,11 +991,11 @@ export function OwnerVehiclesPage({ owner, onBack }) {
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 font-medium transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Owners
+          {readOnly ? "Dashboard" : "Owners"}
         </button>
         <ChevronRight className="w-4 h-4 text-gray-300" />
         <span className="text-sm text-gray-800 font-semibold">
-          {owner.firstName} {owner.lastName}
+          {readOnly ? "My Vehicles" : `${owner.firstName} ${owner.lastName}`}
         </span>
       </div>
 
@@ -999,17 +1005,19 @@ export function OwnerVehiclesPage({ owner, onBack }) {
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
           {/* Owner profile card with stats */}
           <OwnerProfileCard owner={owner} vehicles={vehicles} />
-          <button
-            onClick={() => {
-              setEditingVehicle(null);
-              setSelectedVehicle(null);
-              setFormMode("add");
-            }}
-            className="flex items-center gap-2 bg-blue-950 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Vehicle
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => {
+                setEditingVehicle(null);
+                setSelectedVehicle(null);
+                setFormMode("add");
+              }}
+              className="flex items-center gap-2 bg-blue-950 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Vehicle
+            </button>
+          )}
         </div>
 
         {/* Split panel */}
@@ -1058,8 +1066,8 @@ export function OwnerVehiclesPage({ owner, onBack }) {
                       setFormMode(null);
                       setEditingVehicle(null);
                     }}
-                    onEdit={handleEditVehicle}
-                    onDelete={handleDeleteVehicle}
+                    onEdit={readOnly ? null : handleEditVehicle}
+                    onDelete={readOnly ? null : handleDeleteVehicle}
                   />
                 ))}
               </div>

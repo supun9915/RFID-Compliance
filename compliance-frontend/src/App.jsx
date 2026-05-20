@@ -46,14 +46,28 @@ export function App() {
     return unsubscribe;
   }, []);
 
+  const handleLoginSuccess = () => {
+    const role = getUserRole();
+    setCurrentPage(role === "OWNER" ? "myVehicles" : "dashboard");
+    setAuthenticated(true);
+  };
+
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, open: false }));
   };
 
   const renderPage = () => {
     const role = getUserRole();
-    const guard = (page, element) =>
-      canView(role, page) ? element : <Dashboard />;
+    const guard = (page, element) => (canView(role, page) ? element : null);
+
+    // Get the current logged-in user for owner self-service pages
+    const getCurrentUser = () => {
+      try {
+        return JSON.parse(localStorage.getItem("user") || "{}");
+      } catch {
+        return {};
+      }
+    };
 
     switch (currentPage) {
       case "dashboard":
@@ -77,6 +91,15 @@ export function App() {
               setCurrentPage("owners");
               setActiveOwner(null);
             }}
+          />,
+        );
+      case "myVehicles":
+        return guard(
+          PAGES.VEHICLE,
+          <OwnerVehiclesPage
+            owner={getCurrentUser()}
+            readOnly
+            onBack={() => setCurrentPage("dashboard")}
           />,
         );
       case "documents":
@@ -114,7 +137,7 @@ export function App() {
   return (
     <>
       {!authenticated ? (
-        <Login onLoginSuccess={() => setAuthenticated(true)} />
+        <Login onLoginSuccess={handleLoginSuccess} />
       ) : (
         <div className="min-h-screen bg-gray-50 flex font-sans">
           {/* Fixed Sidebar */}
